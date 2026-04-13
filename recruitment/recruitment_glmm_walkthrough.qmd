@@ -29,9 +29,6 @@ clean_coral <- read_csv(
   "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/data/updated_coral_tidy_2013-2024.csv"
 )
 
-
-# ── Clean ─────────────────────────────────────────────────────────────
-
 recruit_raw <- clean_coral %>%
   filter(!grepl("^P", transect)) %>%
   dplyr::select(site, habitat, transect, dyn_recruitment, year, taxa) %>%
@@ -50,6 +47,14 @@ recruit_raw <- clean_coral %>%
 ```
 
 
+
+```{r}
+# Create a function to filter for the dataset of each 
+
+
+
+
+```
 
 
 
