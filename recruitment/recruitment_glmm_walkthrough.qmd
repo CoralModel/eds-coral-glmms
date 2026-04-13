@@ -1,0 +1,56 @@
+---
+title: "recruitment_glmm_walkthrough"
+format: html
+---
+
+# Capstone CoralModel Project: Assessing the Effect of a Bleaching Event on Demographic Rates Variation in Coral Communities in Moorea, French Polynesia
+
+## Introduction
+
+This document details the analysis of coral recruitment for three different taxa based on survey data recorded over nearly a decade by Dr. Hunter Lenihan for the Mo'orea Long Term Ecological Network site (MCR-LTER). The purpose of this analysis is to serve as a supporting walk through for understanding recruitment as one of three demographic profiles impacted by the 2019 bleaching event. The following question was utilized to guide the analysis:
+
+**What are island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora between the backreef and forereef before and after the bleaching event?**
+
+
+## Data Importing and Wrangling 
+The following packages were required prior to conducting additional data wrangling: 
+```{r}
+library(tidyverse) # For tidy data
+library(glmmTMB) # For GLMM model 
+library(ggeffects) # For calculating marginal effects of each model 
+library(DHARMa) # For model checks and validation 
+```
+
+
+Then, the data (referenced from a separate repository), .
+
+```{r}
+clean_coral <- read_csv(
+  "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/data/updated_coral_tidy_2013-2024.csv"
+)
+
+
+# ── Clean ─────────────────────────────────────────────────────────────
+
+recruit_raw <- clean_coral %>%
+  filter(!grepl("^P", transect)) %>%
+  dplyr::select(site, habitat, transect, dyn_recruitment, year, taxa) %>%
+  mutate(
+    transect = case_when(
+      transect == "T02_OLD"     ~ "T02",
+      transect == "T03_PRE2020" ~ "T03",
+      transect == "T04_OLD"     ~ "T04",
+      transect == "T02_2021"    ~ "T02",
+      transect == "TO1"         ~ "T01",
+      TRUE                      ~ transect
+    ),
+    taxa = if_else(taxa == "A", "Acr", taxa)
+  )
+
+```
+
+
+
+
+
+
