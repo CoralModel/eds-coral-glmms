@@ -47,9 +47,7 @@ library(glmmTMB)
 #| message: false
 #| warning: false
 
-# Read in data and converting missing data to NA values
-clean_coral <- read_csv(here::here("data", "updated_coral_tidy_2013-2024.csv"),
-                        na = c("UK", "MK", "?", "MD", "US", "NS", "MissingObs", "Na", "NA"))
+clean_coral <- read_csv(here::here("..", "eds-coral-data-storage-management", "data", "volume_corals.csv"))
 
 # Coral color way - consistent across all visualizations
 coral_colors <- c(
@@ -184,8 +182,8 @@ growth_data <- volume_coral |>
     habitat     = relevel(factor(habitat), ref = "BR"),
     site        = relevel(factor(site),    ref = "LTER1"),
     # Log-transform size variables
-    log_size_t0 = log(size_t0),
-    log_size_t1 = log(size_t1)
+    log10_size_t0 = log10(size_t0),
+    log10_size_t1 = log10(size_t1)
   )
 
 # Split by taxa for separate models
@@ -214,21 +212,21 @@ growth_por <- growth_data |> filter(taxa == "Por")
 #| warning: false
 
 m1_acr <- glmmTMB(
-  log_size_t1 ~ log_size_t0 * habitat * period +
+  log10_size_t1 ~ log10_size_t0 * habitat * period +
     (1 | site/transect_id/coral_number) + (1 | year),
   family = gaussian(),
   data   = growth_acr
 )
 
 m1_poc <- glmmTMB(
-  log_size_t1 ~ log_size_t0 * habitat * period +
+  log10_size_t1 ~ log10_size_t0 * habitat * period +
     (1 | site/transect_id/coral_number) + (1 | year),
   family = gaussian(),
   data   = growth_poc
 )
 
 m1_por <- glmmTMB(
-  log_size_t1 ~ log_size_t0 * habitat * period +
+  log10_size_t1 ~ log10_size_t0 * habitat * period +
     (1 | site/transect_id/coral_number) + (1 | year),
   family = gaussian(),
   data   = growth_por
@@ -248,30 +246,59 @@ summary(m1_por)
 ------------------------------------------------------------------------
 
 ```{r}
-growth_acr$pred_t0 <- predict(m1_acr, type = "response", re.form = NA)
+growth_acr$pred_log10_t1 <- predict(m1_acr, type = "response", re.form = NA)
 
-growth_poc$pred_t0 <- predict(m1_poc, type = "response", re.form = NA)
+growth_poc$pred_log10_t1 <- predict(m1_poc, type = "response", re.form = NA)
 
-growth_por$pred_t0 <- predict(m1_por, type = "response", re.form = NA)
+growth_por$pred_log10_t1 <- predict(m1_por, type = "response", re.form = NA)
 
 ```
 
 ```{r}
  ggplot(data = growth_acr) +
-  geom_point(aes(x = log_size_t0, y = log_size_t1)) +
-  geom_line(aes(x = log_size_t0, y = pred_t0, color = period)) +
-  facet_grid(~ habitat)
+  geom_point(aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3) +
+  geom_line(aes(x = log10_size_t0, y = pred_log10_t1, color = period), linewidth = 1) +
+  facet_grid(~ habitat, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                   labels = c("0" = "Before bleaching", "1" = "After bleaching")) + 
+  theme_bw() +
+  labs(title = "Acropora Growth",
+       x = "Initial size (cm³)",
+       y = "Final size (cm³)", 
+       color = "Period")
  
  ggplot(data = growth_poc) +
-  geom_point(aes(x = log_size_t0, y = log_size_t1)) +
-  geom_line(aes(x = log_size_t0, y = pred_t0, color = period)) +
-  facet_grid(~ habitat)
+  geom_point(aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3) +
+  geom_line(aes(x = log10_size_t0, y = pred_log10_t1, color = period), linewidth = 1) +
+  facet_grid(~ habitat, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                   labels = c("0" = "Before bleaching", "1" = "After bleaching")) + 
+  theme_bw() +
+  labs(title = "Pocillopora Growth",
+       x = "Initial size (cm³)",
+       y = "Final size (cm³)", 
+       color = "Period")
  
  
  ggplot(data = growth_por) +
-  geom_point(aes(x = log_size_t0, y = log_size_t1)) +
-  geom_line(aes(x = log_size_t0, y = pred_t0, color = period)) +
-  facet_grid(~ habitat)
+  geom_point(aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3) +
+  geom_line(aes(x = log10_size_t0, y = pred_log10_t1, color = period), linewidth = 1) +
+  facet_grid(~ habitat, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                   labels = c("0" = "Before bleaching", "1" = "After bleaching")) + 
+  theme_bw() +
+  labs(title = "Porites Growth",
+       x = "Initial size (cm³)",
+       y = "Final size (cm³)", 
+       color = "Period")
+
+   
 ```
 
 # Model 2: Island-Wide Growth by Site × Habitat Before/After Bleaching
@@ -294,21 +321,21 @@ Note: Site is included as a **fixed effect** here because the question explicitl
 #| warning: false
 
 m2_acr <- glmmTMB(
-  log_size_t1 ~ log_size_t0 * site * habitat * period +
+  log10_size_t1 ~ log10_size_t0 * site * habitat * period +
     (1 | transect_id/coral_number) + (1 | year),
   family = gaussian(),
   data   = growth_acr
 )
 
 m2_poc <- glmmTMB(
-  log_size_t1 ~ log_size_t0 * site * habitat * period +
+  log10_size_t1 ~ log10_size_t0 * site * habitat * period +
     (1 | transect_id/coral_number) + (1 | year),
   family = gaussian(),
   data   = growth_poc
 )
 
 m2_por <- glmmTMB(
-  log_size_t1 ~ log_size_t0 * site * habitat * period +
+  log10_size_t1 ~ log10_size_t0 * site * habitat * period +
     (1 | transect_id/coral_number) + (1 | year),
   family = gaussian(),
   data   = growth_por
@@ -326,83 +353,102 @@ summary(m2_por)
 ```
 
 ```{r}
-growth_acr$pred_t0 <- predict(m1_acr, type = "response", re.form = NA)
+growth_acr$pred_log10_t1 <- predict(m2_acr, type = "response", re.form = NA)
 
-growth_poc$pred_t0 <- predict(m1_poc, type = "response", re.form = NA)
+growth_poc$predlog10_t1 <- predict(m2_poc, type = "response", re.form = NA)
 
-growth_por$pred_t0 <- predict(m1_por, type = "response", re.form = NA)
+growth_por$predlog10_t0 <- predict(m2_por, type = "response", re.form = NA)
 ```
 
 ```{r}
 # Create prediction grid
-pred_grid <- growth_acr |>
+acr_pred_grid <- growth_acr |>
   distinct(site, habitat, period) |>
-  crossing(log_size_t0 = seq(min(growth_acr$log_size_t0),
-                              max(growth_acr$log_size_t0),
+  crossing(log10_size_t0 = seq(min(growth_acr$log10_size_t0),
+                              max(growth_acr$log10_size_t0),
                               length.out = 100))
 
 # Generate predictions (population-level, no random effects)
-pred_grid$pred <- predict(m2_acr, newdata = pred_grid, 
+acr_pred_grid$pred_size_t0 <- predict(m2_acr, newdata = acr_pred_grid, 
                           type = "response", re.form = NA)
 
 # Plot
 ggplot() +
   geom_point(data = growth_acr, 
-             aes(x = log_size_t0, y = log_size_t1), 
+             aes(x = log10_size_t0, y = log10_size_t1), 
              alpha = 0.3, size = 0.8) +
-  geom_line(data = pred_grid,
-            aes(x = log_size_t0, y = pred, color = period)) +
-  facet_grid(habitat ~ site) +
-  labs(x = "log(size t0)", y = "log(size t1)",
-       title = "Acropora — Model 2 Predictions") +
+  geom_line(data = acr_pred_grid,
+            aes(x = log10_size_t0, y = pred_size_t0, color = period)) +
+  scale_color_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Before bleaching", "1" = "After bleaching")
+  ) +
+  facet_grid(habitat ~ site, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  labs(x = "Initial size (cm³)", y = "Final size (cm³)",
+       title = "Acropora Growth", color = "Period") +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw()
 ```
 
 ```{r}
 # Create prediction grid
-pred_grid <- growth_poc |>
+poc_pred_grid <- growth_poc |>
   distinct(site, habitat, period) |>
-  crossing(log_size_t0 = seq(min(growth_poc$log_size_t0),
-                              max(growth_poc$log_size_t0),
+  crossing(log10_size_t0 = seq(min(growth_poc$log10_size_t0),
+                              max(growth_poc$log10_size_t0),
                               length.out = 100))
 
 # Generate predictions (population-level, no random effects)
-pred_grid$pred <- predict(m2_poc, newdata = pred_grid, 
+poc_pred_grid$pred_size_t0 <- predict(m2_poc, newdata = poc_pred_grid, 
                           type = "response", re.form = NA)
 
 # Plot
 ggplot() +
   geom_point(data = growth_poc, 
-             aes(x = log_size_t0, y = log_size_t1), 
+             aes(x = log10_size_t0, y = log10_size_t1), 
              alpha = 0.3, size = 0.8) +
-  geom_line(data = pred_grid,
-            aes(x = log_size_t0, y = pred, color = period)) +
-  facet_grid(habitat ~ site) +
-  labs(x = "log(size t0)", y = "log(size t1)",
-       title = "Pocillopora — Model 2 Predictions") +
+  geom_line(data = poc_pred_grid,
+            aes(x = log10_size_t0, y = pred_size_t0, color = period)) +
+  scale_color_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Before bleaching", "1" = "After bleaching")
+  ) +
+  facet_grid(habitat ~ site, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  labs(x = "Initial size (cm³)", y = "Final size (cm³)",
+       title = "Pocillopora Growth", color = "Period") +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw()
 ```
 
 ```{r}
 # Create prediction grid
-pred_grid <- growth_por |>
+por_pred_grid <- growth_por |>
   distinct(site, habitat, period) |>
-  crossing(log_size_t0 = seq(min(growth_por$log_size_t0),
-                              max(growth_por$log_size_t0),
+  crossing(log10_size_t0 = seq(min(growth_por$log10_size_t0),
+                              max(growth_por$log10_size_t0),
                               length.out = 100))
 
 # Generate predictions (population-level, no random effects)
-pred_grid$pred <- predict(m2_por, newdata = pred_grid, 
+por_pred_grid$pred_size_t0 <- predict(m2_por, newdata = por_pred_grid, 
                           type = "response", re.form = NA)
+
 # Plot
 ggplot() +
   geom_point(data = growth_por, 
-             aes(x = log_size_t0, y = log_size_t1), 
+             aes(x = log10_size_t0, y = log10_size_t1), 
              alpha = 0.3, size = 0.8) +
-  geom_line(data = pred_grid,
-            aes(x = log_size_t0, y = pred, color = period)) +
-  facet_grid(habitat ~ site) +
-  labs(x = "log(size t0)", y = "log(size t1)",
-       title = "Por — Model 2 Predictions") +
+  geom_line(data = por_pred_grid,
+            aes(x = log10_size_t0, y = pred_size_t0, color = period)) +
+  scale_color_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Before bleaching", "1" = "After bleaching")
+  ) +
+  facet_grid(habitat ~ site, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  labs(x = "Initial size (cm³)", y = "Final size (cm³)",
+       title = "Porites Growth", color = "Period") +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw()
 ```
