@@ -8,7 +8,7 @@ This repository contains taxa-specific generalized linear mixed models (GLMMs) e
 
 ## Research questions
 
-Each vital rate is examined under two model structures:
+Each demographic rate is examined under two model structures:
 
 - **Model 1 (Habitat):** Do rates differ between forereef and backreef habitats before and after the 2019 bleaching event?
 - **Model 2 (Site × Habitat):** Do rates differ across all site-habitat combinations (LTER1 backreef, LTER1 forereef, LTER2 backreef, LTER2 forereef, etc.) before and after the 2019 bleaching event?
