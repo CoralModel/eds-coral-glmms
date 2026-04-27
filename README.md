@@ -1,7 +1,7 @@
 # MCR LTER Coral Demography — GLMM Analysis
 
 <img width="940" height="508" alt="staghorn" src="https://github.com/user-attachments/assets/a86a2875-1ee8-451c-b699-a213051b9f76" />
-
+<br>
 
 This repository contains taxa-specific generalized linear mixed models (GLMMs) estimating rates of **recruitment**, **growth**, and **survival** for three coral taxa (*Acropora*, *Pocillopora*, *Porites*) across backreef and forereef habitats at the Moorea Coral Reef (MCR) LTER site. Models are fit before and after the 2019 bleaching event to assess how this disturbance affected coral population dynamics island-wide.
 
@@ -28,8 +28,9 @@ Each vital rate is examined under two model structures:
 ├── growth_glmm.qmd          # Size-dependent growth rate models
 ├── recruitment_glmm.qmd     # Recruitment rate models
 ├── survival_glmm.qmd        # Survival rate models
-├──eds-coral-glmms.Rproj
+├── eds-coral-glmms.Rproj
 ├── README.md
+└── LICENSE
 ```
 
 > **Note:** Input data (`volume_corals.csv`) is read from the companion data cleaning repository [`eds-coral-data-storage-management`](https://github.com/) and is not stored here.
