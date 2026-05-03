@@ -5,13 +5,7 @@ library(ggeffects)
 # Q1: Island-wide habitat differences for pre vs post bleaching
 #     Formula = habitat * pre_post_f + (1|site/transect_id) + (1|year)
 #
-# Q2: Site × habitat differences pre vs post bleaching
-# Different versions to test for best approach based on zero-inflation
-#     Poc: combined three way site * habitat * pre_post_f (Q2A)
-#     Por: combined three way attempted (Q2A), separate pre/post (Q2B)
-#     Acr: not estimable since zeros in BR prevent site*habitat
-#          interaction estimation... is this a biological finding?
-#
+
 # Families: Acr = Poisson, Poc/Por = nbinom2
 # Reference levels: habitat = BR, period = Pre, site = LTER1
 
@@ -22,6 +16,13 @@ clean_coral <- read_csv(
   "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/data/updated_coral_tidy_2013-2024.csv"
 )
 
+raw_data <- read_csv(
+  "~/MEDS/capstone/eds-coral-data-storage-management/data/coral_tidy_dyn_2013-2024.csv")
+
+unique(raw_data)
+raw_data %>% filter(habitat == "LTER4")
+
+view(raw_data)
 
 # ── Step 2: Clean ─────────────────────────────────────────────────────────────
 
@@ -67,13 +68,13 @@ recruit_transect <- recruit_raw %>%
 dat_acr      <- recruit_transect %>% filter(taxa == "Acr")
 dat_poc      <- recruit_transect %>% filter(taxa == "Poc")
 dat_por      <- recruit_transect %>% filter(taxa == "Por")
-dat_acr_pre  <- recruit_transect %>% filter(taxa == "Acr", pre_post_f == "Pre")
-dat_acr_post <- recruit_transect %>% filter(taxa == "Acr", pre_post_f == "Post")
-dat_poc_pre  <- recruit_transect %>% filter(taxa == "Poc", pre_post_f == "Pre")
-dat_poc_post <- recruit_transect %>% filter(taxa == "Poc", pre_post_f == "Post")
-dat_por_pre  <- recruit_transect %>% filter(taxa == "Por", pre_post_f == "Pre")
-dat_por_post <- recruit_transect %>% filter(taxa == "Por", pre_post_f == "Post")
-
+# dat_acr_pre  <- recruit_transect %>% filter(taxa == "Acr", pre_post_f == "Pre")
+# dat_acr_post <- recruit_transect %>% filter(taxa == "Acr", pre_post_f == "Post")
+# dat_poc_pre  <- recruit_transect %>% filter(taxa == "Poc", pre_post_f == "Pre")
+# dat_poc_post <- recruit_transect %>% filter(taxa == "Poc", pre_post_f == "Post")
+# dat_por_pre  <- recruit_transect %>% filter(taxa == "Por", pre_post_f == "Pre")
+# dat_por_post <- recruit_transect %>% filter(taxa == "Por", pre_post_f == "Post")
+# 
 
 # ── Step 4: Data structure checks ─────────────────────────────────────────────
 
@@ -131,8 +132,7 @@ recruit_transect %>%
 
 ## Model validation and assumptions 
 # 1. for negative binomial, we will need to test for the overdispersion (qqplot), heteroscedacity, and zero-inflation
-
-
+# 2. Temporal autocorrelation??
 
 
 #_______________________________________________________________________
@@ -194,6 +194,7 @@ print(ggpredict(q1_poc, terms = c("habitat", "pre_post_f")))
 
 cat("Q1 Por ~ habitat * pre_post_f | site/transect_id + year\n")
 cat("Family: nbinom2\n")
+
 
 q1_por <- glmmTMB(
   recruits_int ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
@@ -257,6 +258,11 @@ print(ggpredict(q2a_poc, terms = c("site", "habitat", "pre_post_f")))
 # but siteLTER2:habitatOR:pre_post_fPost = 2.24 (p=0.049) and siteLTER5:habitatOR:pre_post_fPost = 3.37 (p=0.006) meaning LTER2-OR and LTER5-OR did NOT crash as badly as LTER1-OR. 
 #  marginal means show that: 
 # LTER1-OR went from 1.46 to 0.07, but LTER5-OR only went from 0.90 to 0.41. site-habitat ranking seems to have shifted
+
+
+
+
+
 
 
 # ── Q2A Por ──────────────────────────────────────────────────────────────────
