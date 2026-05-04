@@ -12,17 +12,23 @@ library(ggeffects)
 
 # ── Load data ──────────────────────────────────────────────────────────────
 
+# clean_coral <- read_csv(
+#   "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/data/updated_coral_tidy_2013-2024.csv"
+# )
+
+
 clean_coral <- read_csv(
-  "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/data/updated_coral_tidy_2013-2024.csv"
+  "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/volume_corals.csv"
 )
 
-raw_data <- read_csv(
-  "~/MEDS/capstone/eds-coral-data-storage-management/data/coral_tidy_dyn_2013-2024.csv")
 
-unique(raw_data)
-raw_data %>% filter(habitat == "LTER4")
-
-view(raw_data)
+# raw_data <- read_csv(
+#   "~/MEDS/capstone/eds-coral-data-storage-management/data/coral_tidy_dyn_2013-2024.csv")
+# 
+# unique(raw_data)
+# raw_data %>% filter(habitat == "LTER4")
+# 
+# view(raw_data)
 
 # ── Step 2: Clean ─────────────────────────────────────────────────────────────
 
@@ -162,7 +168,7 @@ pr_q1_acr <- residuals(q1_acr, type = "pearson")
 cat(round(sum(pr_q1_acr^2) / df.residual(q1_acr), 3), "\n")
 
 cat("\nQ1 Acr marginal effects: habitat × period:\n")
-print(ggpredict(q1_acr, terms = c("habitat", "pre_post_f")))
+print(ggpredict(q1_acr, terms = c("habitat", "pre_post_f"), bias_correction = T)) # Adjust for Jensen's inequality based on console feedback
 
 
 # ── Q1 Poc ───────────────────────────────────────────────────────────────────
@@ -188,6 +194,8 @@ cat(round(sum(pr_q1_poc^2) / df.residual(q1_poc), 3), "\n")
 
 cat("\nQ1 Poc marginal effects — habitat × period:\n")
 print(ggpredict(q1_poc, terms = c("habitat", "pre_post_f")))
+
+
 
 
 # ── Q1 Por ───────────────────────────────────────────────────────────────────
