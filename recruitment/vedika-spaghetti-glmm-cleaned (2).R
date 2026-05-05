@@ -297,338 +297,163 @@ cat(round(sum(pr_q2a_por^2) / df.residual(q2a_por), 3), "\n")
 cat("\nQ2A Por marginal effects — site × habitat × period:\n")
 print(ggpredict(q2a_por, terms = c("site", "habitat", "pre_post_f")))
 
+######____________ predict
+library(tidyverse)
+library(glmmTMB)
 
-#_____________________
-# Q2B: sitex habitat (separate pre and post) S
-# Formula: site * habitat + (1|transect_id) + (1|year)
-# Used for Por (avoids three-way terms from structural zeros)
-# and Acr (separate pre/post shown for completeness- coefficients with
-# huge SEs on BR cells reported as not estimable, this could be a biological finding)
-# ══════════════════════════════════════════════════════════════════════════════
-
-# ── Q2B Por PRE ──────────────────────────────────────────────────────────────
-cat("Q2B Por PRE ~ site * habitat | transect_id + year\n")
-cat("Family: nbinom2 | Period: Pre-bleaching (2013-2018)\n")
-
-q2b_por_pre <- glmmTMB(
-  recruits_int ~ site * habitat + (1 | transect_id) + (1 | year),
-  family    = nbinom2,
-  data      = dat_por_pre,
-  na.action = na.exclude
-)
-
-summary(q2b_por_pre)
-
-cat("\nOverdispersion ratio:\n")
-pr_q2b_por_pre <- residuals(q2b_por_pre, type = "pearson")
-cat(round(sum(pr_q2b_por_pre^2) / df.residual(q2b_por_pre), 3), "\n")
-
-cat("\nQ2B Por PRE marginal effects — site × habitat:\n")
-print(ggpredict(q2b_por_pre, terms = c("site", "habitat")))
+# ── Prediction Grids 
+# Formula: recruits_int ~ habitat * pre_post_f + (1|site/transect_id) + (1|year)
+# re.form = NA to marginalise over all random effects island-wide
+# type = "response"  to back transform from log scale to count scale
 
 
-# ── Q2B Por POST ─────────────────────────────────────────────────────────────
+# ── Acropora 
 
-cat("Q2B Por POST ~ site * habitat | transect_id + year\n")
-cat("Family: nbinom2 | Period: Post-bleaching (2019-2024)\n")
-cat("Note: LTER2:habitatOR and LTER4:habitatOR have large SEs —\n")
-cat("structural zeros (no Por recruitment in OR at those sites post-bleaching)\n")
+acr_pred_grid_q1 <- dat_acr %>%
+  distinct(habitat, pre_post_f)
 
-q2b_por_post <- glmmTMB(
-  recruits_int ~ site * habitat + (1 | transect_id) + (1 | year),
-  family    = nbinom2,
-  data      = dat_por_post,
-  na.action = na.exclude
-)
+acr_pred_grid_q1$predicted <- predict(q1_acr, newdata = acr_pred_grid_q1,
+                                      type = "response", re.form = NA)
 
-summary(q2b_por_post)
-
-cat("\nOverdispersion ratio:\n")
-pr_q2b_por_post <- residuals(q2b_por_post, type = "pearson")
-cat(round(sum(pr_q2b_por_post^2) / df.residual(q2b_por_post), 3), "\n")
-
-cat("\nQ2B Por POST marginal effects — site × habitat:\n")
-ggpredict(q2b_por_post, terms = c("site", "habitat")) %>%
-  as_tibble() %>%
-  mutate(conf.high = pmin(conf.high, 10)) %>%
-  print()
-
-## General summary: siteLTER2:habitatOR:pre_post_fPost and siteLTER4:habitatOR:pre_post_fPost have SEs in the thousands...those are structural zeros (LTER2-OR and LTER4-OR had zero Por recruits post-bleaching). 
-# The siteLTER5:habitatOR:pre_post_fPost term is fine (p=0.005)...the  Q2B pre/post split handles this better, pre-bleaching shows LTER4-OR significantly lower than LTER1-OR (siteLTER4:habitatOR = -2.25, p<0.001), LTER5-OR also lower (p=0.012). 
-# Post-bleaching, LTER5-OR recovered relative to others (p=0.047) while LTER2-OR and LTER4-OR had near zero recruitment
+acr_pred_grid_q1
 
 
+### manual math
+# BR Pre  = intercept only (reference level)
+exp(-3.8370)                                    # = 0.0216 (match)
 
-#___________________________________________________________
-# ── Q2B Acr pre shown here for justification of completeness but BR  not estimable
-cat("Q2B Acr PRE ~ site * habitat | transect_id + year\n")
-cat("Family: Poisson | Period: Pre-bleaching\n")
-cat("Note: BR cells have structural zeros at LTER1 and LTER5.\n")
-cat("Coefficients involving BR will have NaN SEs — not estimable.\n")
-cat("OR cells are interpretable.\n")
-cat("════════════════════════════════════════════════════\n")
+# BR Post = intercept + post effect
+exp(-3.8370 + 0.8367)                           # = 0.0498 (match)
 
-q2b_acr_pre <- glmmTMB(
-  recruits_int ~ site * habitat + (1 | transect_id) + (1 | year),
-  family    = poisson(),
-  data      = dat_acr_pre,
-  na.action = na.exclude
-)
+# OR Pre  = intercept + OR effect
+exp(-3.8370 + 3.0602)                           # = 0.460  (match)
 
-summary(q2b_acr_pre)
-
-cat("\nOverdispersion ratio:\n")
-pr_q2b_acr_pre <- residuals(q2b_acr_pre, type = "pearson")
-cat(round(sum(pr_q2b_acr_pre^2) / df.residual(q2b_acr_pre), 3), "\n")
-
-cat("\nQ2B Acr PRE marginal effects — OR sites only (BR not estimable):\n")
-print(ggpredict(q2b_acr_pre, terms = c("site", "habitat")))
+# OR Post = intercept + OR + post + interaction
+exp(-3.8370 + 3.0602 + 0.8367 + (-1.5736))     # = 0.220  (match)
 
 
-# ── Q2B Acr Post shown for completeness but some BR not estimable
-cat("Q2B Acr POST ~ site * habitat | transect_id + year\n")
-cat("Family: Poisson | Period: Post-bleaching\n")
-cat("Note: LTER2-BR and LTER5-BR are structural zeros post-bleaching.\n")
-cat("LTER1-BR and LTER4-BR are estimable. All OR cells estimable.\n")
-q2b_acr_post <- glmmTMB(
-  recruits_int ~ site * habitat + (1 | transect_id) + (1 | year),
-  family    = poisson(),
-  data      = dat_acr_post,
-  na.action = na.exclude
-)
+# ── Pocillopora 
+poc_pred_grid_q1 <- dat_poc %>%
+  distinct(habitat, pre_post_f)
 
-summary(q2b_acr_post)
+poc_pred_grid_q1$predicted <- predict(q1_poc, newdata = poc_pred_grid_q1,
+                                      type = "response", re.form = NA)
 
-cat("\nOverdispersion ratio:\n")
-pr_q2b_acr_post <- residuals(q2b_acr_post, type = "pearson")
-cat(round(sum(pr_q2b_acr_post^2) / df.residual(q2b_acr_post), 3), "\n")
-
-cat("\nQ2B Acr post marginal effects — estimable cells only:\n")
-print(ggpredict(q2b_acr_post, terms = c("site", "habitat")))
-
-## Generally, all models failed for Acr... Acr may not be estimable from the data... Acr sitexhabitat interactions are not estimable from the data... not enough signal in BR... 
-# This may mean that recruitment disappeared from BR afterpost-bleaching at these sites
-
-# Model convergence fails here without splitting.... also SE is huge??
-summary(glmmTMB(
-  recruits_int ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
-  family    = nbinom2,
-  data      = dat_acr,
-  na.action = na.exclude
-))
+poc_pred_grid_q1
 
 
+# ── Porites 
+
+por_pred_grid_q1 <- dat_por %>%
+  distinct(habitat, pre_post_f)
+
+por_pred_grid_q1$predicted <- predict(q1_por, newdata = por_pred_grid_q1,
+                                      type = "response", re.form = NA)
+
+por_pred_grid_q1
 
 
+# ── Combine for plotting 
+
+q1_pred_all <- bind_rows(
+  acr_pred_grid_q1 %>% mutate(taxa = "Acropora"),
+  poc_pred_grid_q1 %>% mutate(taxa = "Pocillopora"),
+  por_pred_grid_q1 %>% mutate(taxa = "Porites")
+) %>%
+  mutate(
+    taxa       = factor(taxa, levels = c("Acropora", "Pocillopora", "Porites")),
+    pre_post_f = factor(pre_post_f, levels = c("Pre", "Post"))
+  )
 
 
-
-
-
-
-
-# Plots
-# Raw data as time series backdrop with GLMM marginal means per period overlaid
+# ── Bar plot 
+# ******predict() gives point estimates only... so no se (how to get??), use emmeans??
+# For se bars need emmeans() or bootstrap 
 
 period_colors <- c(Pre = "#4e9af1", Post = "#f17a4e")
-site_colors   <- c(LTER1 = "#1f77b4", LTER2 = "#ff7f0e",
-                   LTER4 = "#2ca02c", LTER5 = "#9467bd")
-taxa_labels   <- c(Acr = "Acropora", Poc = "Pocillopora", Por = "Porites")
 
-# ── Plot Q1 ───────────────────────────────────────────────────────────────────
-
-raw_q1 <- recruit_transect %>%
-  filter(taxa %in% c("Acr", "Poc", "Por")) %>%
-  group_by(taxa, habitat, year, pre_post_f) %>%
-  summarize(mean_std = mean(recruits_std, na.rm = TRUE), .groups = "drop") %>%
-  mutate(taxa = factor(taxa, levels = c("Acr", "Poc", "Por")))
-
-preds_q1_acr <- ggpredict(q1_acr, terms = c("habitat", "pre_post_f")) %>%
-  as_tibble() %>%
-  rename(habitat = x, pre_post_f = group) %>%
-  mutate(taxa = "Acr",
-         year_mid = if_else(pre_post_f == "Pre", 2015.5, 2021.5))
-
-preds_q1_poc <- ggpredict(q1_poc, terms = c("habitat", "pre_post_f")) %>%
-  as_tibble() %>%
-  rename(habitat = x, pre_post_f = group) %>%
-  mutate(taxa = "Poc",
-         year_mid = if_else(pre_post_f == "Pre", 2015.5, 2021.5))
-
-preds_q1_por <- ggpredict(q1_por, terms = c("habitat", "pre_post_f")) %>%
-  as_tibble() %>%
-  rename(habitat = x, pre_post_f = group) %>%
-  mutate(taxa = "Por",
-         year_mid = if_else(pre_post_f == "Pre", 2015.5, 2021.5))
-
-preds_q1 <- bind_rows(preds_q1_acr, preds_q1_poc, preds_q1_por) %>%
-  mutate(taxa = factor(taxa, levels = c("Acr", "Poc", "Por")))
-
-p_q1 <- ggplot() +
-  geom_vline(xintercept = 2018.5, linetype = "dashed",
-             color = "grey50", linewidth = 0.5) +
-  annotate("text", x = 2019, y = Inf, label = "← Bleaching",
-           hjust = 0, vjust = 2, size = 2.8, color = "grey40") +
-  geom_line(
-    data = raw_q1,
-    aes(x = year, y = mean_std, color = pre_post_f,
-        group = interaction(habitat, pre_post_f)),
-    alpha = 0.5, linewidth = 0.6
+ggplot(q1_pred_all,
+       aes(x = habitat, y = predicted, fill = pre_post_f)) +
+  geom_col(position = position_dodge(width = 0.75),
+           width = 0.65, colour = "white", linewidth = 0.3) +
+  facet_wrap(~ taxa, scales = "free_y", ncol = 3) +
+  scale_fill_manual(
+    values = period_colors,
+    name   = "Period",
+    labels = c(Pre = "Pre-bleaching (2013–2018)",
+               Post = "Post-bleaching (2019–2024)")
   ) +
-  geom_point(
-    data = raw_q1,
-    aes(x = year, y = mean_std, color = pre_post_f),
-    alpha = 0.6, size = 1.8
-  ) +
-  geom_pointrange(
-    data = preds_q1,
-    aes(x = year_mid, y = predicted,
-        ymin = conf.low, ymax = conf.high,
-        color = pre_post_f),
-    size = 0.9, linewidth = 1.3
-  ) +
-  facet_grid(
-    habitat ~ taxa,
-    labeller = labeller(taxa = taxa_labels),
-    scales   = "free_y"
-  ) +
-  scale_color_manual(values = period_colors, name = "Period") +
-  scale_x_continuous(breaks = seq(2013, 2024, by = 3)) +
   labs(
-    title    = "Q1: Island-wide habitat recruitment pre vs post bleaching",
-    subtitle = "Small points/lines = raw annual means  |  Large points + CI = GLMM marginal mean per period",
-    x = "Year", y = "Recruits per 5 m²",
-    caption  = "Model: habitat × period + (1|site/transect_id) + (1|year). Acr = Poisson; Poc, Por = nbinom2."
+    title    = "Island-wide coral recruitment by habitat and bleaching period",
+    subtitle = "Marginal predicted counts (re.form = NA), no SE available from predict()",
+    x        = "Habitat",
+    y        = "Predicted recruits per 5 m²"
   ) +
-  theme_bw(base_size = 11) +
+  theme_bw(base_size = 13) +
   theme(
-    strip.background = element_rect(fill = "#2c5f6e"),
-    strip.text       = element_text(color = "white", face = "bold"),
-    panel.grid.minor = element_blank(),
-    axis.text.x      = element_text(angle = 45, hjust = 1),
-    legend.position  = "bottom"
+    strip.background   = element_rect(fill = "grey92", colour = NA),
+    strip.text         = element_text(face = "bold"),
+    legend.position    = "bottom",
+    panel.grid.major.x = element_blank(),
+    plot.title         = element_text(face = "bold"),
+    plot.subtitle      = element_text(colour = "grey40")
   )
 
-print(p_q1)
-ggsave(
-  "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/figs/Q1_habitat_period.png",
-  p_q1, width = 10, height = 6, dpi = 300
-)
 
+# Add se to grid
+acr_se <- predict(q1_acr, newdata = acr_pred_grid_q1,
+                  type = "response", re.form = NA, se.fit = TRUE)
+acr_pred_grid_q1$se <- acr_se$se.fit
 
-# ── Plot Q2 ───────────────────────────────────────────────────────────────────
-# Poc: Q2A combined predictions split by period
-# Por: Q2B separate pre/post predictions
-# Acr: Q2B predictions shown with caveat that BR cells are not estimable
+# Same for poc and por
+poc_se <- predict(q1_poc, newdata = poc_pred_grid_q1,
+                  type = "response", re.form = NA, se.fit = TRUE)
+poc_pred_grid_q1$se <- poc_se$se.fit
 
-raw_q2 <- recruit_transect %>%
-  filter(taxa %in% c("Acr", "Poc", "Por")) %>%
-  group_by(taxa, site, habitat, pre_post_f) %>%
-  summarize(mean_std = mean(recruits_std, na.rm = TRUE), .groups = "drop") %>%
-  mutate(
-    taxa         = factor(taxa, levels = c("Acr", "Poc", "Por")),
-    pre_post_f   = factor(pre_post_f, levels = c("Pre", "Post")),
-    site_habitat = paste(site, habitat, sep = "-")
-  )
+por_se <- predict(q1_por, newdata = por_pred_grid_q1,
+                  type = "response", re.form = NA, se.fit = TRUE)
+por_pred_grid_q1$se <- por_se$se.fit
 
-# Poc predictions from Q2A, split into pre and post rows
-preds_q2_poc <- ggpredict(q2a_poc,
-                          terms = c("site", "habitat", "pre_post_f")) %>%
-  as_tibble() %>%
-  rename(site = x, habitat = group, pre_post_f = facet) %>%
-  mutate(taxa = "Poc",
-         site_habitat = paste(site, habitat, sep = "-"),
-         pre_post_f   = factor(pre_post_f, levels = c("Pre", "Post")),
-         conf.high    = pmin(conf.high, 10))
-
-# Por predictions from Q2B pre and post separately
-preds_q2_por_pre <- ggpredict(q2b_por_pre,
-                              terms = c("site", "habitat")) %>%
-  as_tibble() %>%
-  rename(site = x, habitat = group) %>%
-  mutate(taxa = "Por", pre_post_f = "Pre",
-         site_habitat = paste(site, habitat, sep = "-"),
-         pre_post_f   = factor(pre_post_f, levels = c("Pre", "Post")),
-         conf.high    = pmin(conf.high, 10))
-
-preds_q2_por_post <- ggpredict(q2b_por_post,
-                               terms = c("site", "habitat")) %>%
-  as_tibble() %>%
-  rename(site = x, habitat = group) %>%
-  mutate(taxa = "Por", pre_post_f = "Post",
-         site_habitat = paste(site, habitat, sep = "-"),
-         pre_post_f   = factor(pre_post_f, levels = c("Pre", "Post")),
-         conf.high    = pmin(conf.high, 10))
-
-# Acr predictions from Q2B pre and post — BR cells will have missing CIs
-preds_q2_acr_pre <- ggpredict(q2b_acr_pre,
-                              terms = c("site", "habitat")) %>%
-  as_tibble() %>%
-  rename(site = x, habitat = group) %>%
-  mutate(taxa = "Acr", pre_post_f = "Pre",
-         site_habitat = paste(site, habitat, sep = "-"),
-         pre_post_f   = factor(pre_post_f, levels = c("Pre", "Post")),
-         conf.high    = pmin(conf.high, 10))
-
-preds_q2_acr_post <- ggpredict(q2b_acr_post,
-                               terms = c("site", "habitat")) %>%
-  as_tibble() %>%
-  rename(site = x, habitat = group) %>%
-  mutate(taxa = "Acr", pre_post_f = "Post",
-         site_habitat = paste(site, habitat, sep = "-"),
-         pre_post_f   = factor(pre_post_f, levels = c("Pre", "Post")),
-         conf.high    = pmin(conf.high, 10))
-
-preds_q2 <- bind_rows(
-  preds_q2_poc,
-  preds_q2_por_pre,
-  preds_q2_por_post,
-  preds_q2_acr_pre,
-  preds_q2_acr_post
+# Combine
+q1_pred_all <- bind_rows(
+  acr_pred_grid_q1 %>% mutate(taxa = "Acropora"),
+  poc_pred_grid_q1 %>% mutate(taxa = "Pocillopora"),
+  por_pred_grid_q1 %>% mutate(taxa = "Porites")
 ) %>%
-  mutate(taxa = factor(taxa, levels = c("Acr", "Poc", "Por")))
-
-p_q2 <- ggplot() +
-  geom_point(
-    data = raw_q2,
-    aes(x = site_habitat, y = mean_std, color = site),
-    size = 2.5, alpha = 0.5,
-    position = position_jitter(width = 0.15, seed = 42)
-  ) +
-  geom_pointrange(
-    data = preds_q2,
-    aes(x = site_habitat, y = predicted,
-        ymin = conf.low, ymax = conf.high),
-    color = "black", size = 0.6, linewidth = 1
-  ) +
-  facet_grid(
-    taxa ~ pre_post_f,
-    labeller = labeller(taxa = taxa_labels),
-    scales   = "free_y"
-  ) +
-  scale_color_manual(values = site_colors, name = "Site") +
-  labs(
-    title    = "Q2: Site × habitat recruitment pre vs post bleaching",
-    subtitle = "Colored points = raw period means  |  Black points + CI = GLMM marginal mean",
-    x = "Site-habitat", y = "Recruits per 5 m²",
-    caption  = paste(
-      "Poc: Q2A site × habitat × period three-way (nbinom2).",
-      "Por: Q2B separate pre/post site × habitat (nbinom2); LTER2/4-OR post = structural zeros.",
-      "Acr: Q2B separate pre/post; BR cells at LTER1/2/5 not estimable (structural zeros).",
-      sep = "\n"
-    )
-  ) +
-  theme_bw(base_size = 11) +
-  theme(
-    strip.background = element_rect(fill = "#2c5f6e"),
-    strip.text       = element_text(color = "white", face = "bold"),
-    panel.grid.minor = element_blank(),
-    axis.text.x      = element_text(angle = 45, hjust = 1),
-    legend.position  = "bottom"
+  mutate(
+    taxa       = factor(taxa, levels = c("Acropora", "Pocillopora", "Porites")),
+    pre_post_f = factor(pre_post_f, levels = c("Pre", "Post"))
   )
 
-print(p_q2)
-ggsave(
-  "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/figs/Q2_site_habitat_period.png",
-  p_q2, width = 11, height = 8, dpi = 300
-)
+# Plot
+ggplot(q1_pred_all,
+       aes(x = habitat, y = predicted, fill = pre_post_f)) +
+  geom_col(position = position_dodge(width = 0.75),
+           width = 0.65, colour = "white", linewidth = 0.3) +
+  geom_errorbar(
+    aes(ymin = predicted - 1.96 * se,
+        ymax = predicted + 1.96 * se),
+    position = position_dodge(width = 0.75),
+    width = 0.25, linewidth = 0.6
+  ) +
+  facet_wrap(~ taxa, scales = "free_y", ncol = 3) +
+  scale_fill_manual(
+    values = c(Pre = "#4e9af1", Post = "#f17a4e"),
+    name   = "Period",
+    labels = c(Pre = "Pre-bleaching (2013–2018)",
+               Post = "Post-bleaching (2019–2024)")
+  ) +
+  labs(
+    title = "Island-wide coral recruitment by habitat and bleaching period",
+    x     = "Habitat",
+    y     = "Predicted recruits per 5 m²"
+  ) +
+  theme_bw(base_size = 13) +
+  theme(
+    strip.background   = element_rect(fill = "grey92", colour = NA),
+    strip.text         = element_text(face = "bold"),
+    legend.position    = "bottom",
+    panel.grid.major.x = element_blank(),
+    plot.title         = element_text(face = "bold")
+  )
+

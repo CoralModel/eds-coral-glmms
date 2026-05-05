@@ -12,7 +12,8 @@ This document details the analysis of coral recruitment for three different taxa
 **What are island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora between the backreef and forereef before and after the bleaching event?**
 
 
-## Data Importing and Wrangling 
+## Data Preparation 
+### Load and Clean
 The following packages were required prior to conducting additional data wrangling: 
 ```{r}
 library(tidyverse) # For tidy data
@@ -22,35 +23,16 @@ library(DHARMa) # For model checks and validation
 ```
 
 
-Then, the data (referenced from a separate repository), .
+Then, the cleaned data (referenced from a separate repository) was loaded in.
 
 ```{r}
-# clean_coral <- read_csv(
-#   "~/MEDS/capstone/eds-coral-figs-storage/vedika-r-files/data/updated_coral_tidy_2013-2024.csv"
-# )
-
 clean_coral <- read_csv(
   "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/volume_corals.csv"
 )
 str(clean_coral)
-
-
-# recruit_raw <- clean_coral %>%
-#   filter(!grepl("^P", transect)) %>%
-#   dplyr::select(site, habitat, transect, dyn_recruitment, year, taxa) %>%
-#   mutate(
-#     transect = case_when(
-#       transect == "T02_OLD"     ~ "T02",
-#       transect == "T03_PRE2020" ~ "T03",
-#       transect == "T04_OLD"     ~ "T04",
-#       transect == "T02_2021"    ~ "T02",
-#       transect == "TO1"         ~ "T01",
-#       TRUE   ~ transect
-#     ),
-#     taxa = if_else(taxa == "A", "Acr", taxa)
-#   )
-
 ```
+
+Standardize recruitment for every 5 meters squared. 
 
 ```{r}
 # Summarize standard recruits to site-habitat-transect and year level 
@@ -117,14 +99,7 @@ recruit_transect %>%
 ```
 
 
-```{r}
-# prediction grid 
-
-
-```
-
-
-## Question 1: Island wide habitat x period 
+## Model 1: Island wide habitat x period 
 - **Formula: habitat * pre_post_f + (1|site/transect_id) + (1|year)**
 - **site/transect_id: sites pooled as random... island-wide habitat question**
 - **year crossed random effect: absorbs annual variation**
@@ -143,10 +118,44 @@ q1_acr <- glmmTMB(
 
 summary(q1_acr)
 ```
-Pre-bleaching, OR recruited much more than BR (habitat OR is 3.08 on log scale and significant). The gap shrank post-bleaching. 
+Pre-bleaching, OR recruited much more than BR (habitat OR is 3.06 on log scale and significant). The gap shrank post-bleaching. 
 
-### Porites 
 ```{r}
+# Acropora 
+acr_pred_grid_q1 <- dat_acr %>%
+  distinct(habitat, pre_post_f)
+
+acr_pred_grid_q1$predicted <- predict(q1_acr, newdata = acr_pred_grid_q1,
+                                      type = "response", re.form = NA)
+
+acr_pred_grid_q1$predicted
+
+
+### manual math
+# BR Pre = intercept only (ref level)
+exp(-3.8370)      # = 0.0216 (match)
+
+# BR Post = intercept + post effect
+exp(-3.8370 + 0.8367) # = 0.0498 (match)
+
+# OR Pre  = intercept + OR effect
+exp(-3.8370 + 3.0602)  # = 0.460  (match)
+
+# OR Post = intercept + OR + post + interaction
+exp(-3.8370 + 3.0602 + 0.8367 + (-1.5736))   # = 0.220  (match)
+
+
+# Add se to grid
+acr_se <- predict(q1_acr, newdata = acr_pred_grid_q1,
+                  type = "response", re.form = NA, se.fit = TRUE)
+acr_pred_grid_q1$se <- acr_se$se.fit
+
+```
+
+
+### Pocillopera
+```{r}
+# Poc
 cat("Q1 Poc ~ habitat * pre_post_f | site/transect_id + year\n")
 cat("Family: nbinom2\n")
 
@@ -158,48 +167,142 @@ q1_poc <- glmmTMB(
 )
 
 summary(q1_poc)
-testDispersion(q1_poc)
+
+# Same for poc 
+poc_pred_grid_q1 <- dat_poc %>%
+  distinct(habitat, pre_post_f)
+
+poc_se <- predict(q1_poc, newdata = poc_pred_grid_q1,
+                  type = "response", re.form = NA, se.fit = TRUE)
+
+poc_pred_grid_q1$predicted <- predict(q1_poc, newdata = poc_pred_grid_q1,
+                                      type = "response", re.form = NA)
+
+poc_pred_grid_q1$predicted
+poc_pred_grid_q1$se <- poc_se$se.fit
+
 ```
 
-Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p < .0001). OR recruitment seemed to drop significantly post bleaching. 
+Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p < .05). OR recruitment seemed to drop significantly post bleaching. 
 
-
-
+### Porites
 ```{r}
+# Por 
+cat("Q1 Por ~ habitat * pre_post_f | site/transect_id + year\n")
+cat("Family: nbinom2\n")
 
 
-#### Joaquin's code
-# M1 prediction grids — population-level, no random effects
-acr_pred_grid_m1 <- growth_acr |>
-  distinct(habitat, period) |>
-  crossing(log10_size_t0 = seq(min(growth_acr$log10_size_t0),
-                               max(growth_acr$log10_size_t0),
-                               length.out = 100))
-acr_pred_grid_m1$pred_log10_t1 <- predict(m1_acr, newdata = acr_pred_grid_m1,
-                                           type = "response", re.form = NA)
+q1_por <- glmmTMB(
+  recruits_int ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
+  family    = nbinom2,
+  data      = dat_por,
+  na.action = na.exclude
+)
 
-poc_pred_grid_m1 <- growth_poc |>
-  distinct(habitat, period) |>
-  crossing(log10_size_t0 = seq(min(growth_poc$log10_size_t0),
-                               max(growth_poc$log10_size_t0),
-                               length.out = 100))
-poc_pred_grid_m1$pred_log10_t1 <- predict(m1_poc, newdata = poc_pred_grid_m1,
-                                           type = "response", re.form = NA)
+summary(q1_por)
+```
+```{r}
+por_pred_grid_q1 <- dat_por %>%
+  distinct(habitat, pre_post_f)
 
-por_pred_grid_m1 <- growth_por |>
-  distinct(habitat, period) |>
-  crossing(log10_size_t0 = seq(min(growth_por$log10_size_t0),
-                               max(growth_por$log10_size_t0),
-                               length.out = 100))
-por_pred_grid_m1$pred_log10_t1 <- predict(m1_por, newdata = por_pred_grid_m1,
-                                           type = "response", re.form = NA)
+por_pred_grid_q1$predicted <- predict(q1_por, newdata = por_pred_grid_q1,
+                                      type = "response", re.form = NA)
+
+por_pred_grid_q1$predicted
+por_se <- predict(q1_por, newdata = por_pred_grid_q1,
+                  type = "response", re.form = NA, se.fit = TRUE)
+por_pred_grid_q1$se <- por_se$se.fit
+```
+
+Opposite pattern seen: BR recruited much more than OR pre-bleaching (habitatOR = -1.91 and is significant). 
+Both habitats dropped post bleaching (pre_post is significant); however, the gap is not significant since interaction is not significant. 
+
+## Graphing Predicted Estimates
+```{r}
+# Prediction grids 
+# recruits_int ~ habitat * pre_post_f + (1|site/transect_id) + (1|year)
+# type = "response"  to back transform from log scale to count scale
+
+# # Poc
+# poc_pred_grid_q1 <- dat_poc %>%
+#   distinct(habitat, pre_post_f)
+# 
+# poc_pred_grid_q1$predicted <- predict(q1_poc, newdata = poc_pred_grid_q1,
+#                                       type = "response", re.form = NA)
+# 
+# poc_pred_grid_q1
+# 
+# 
+# # Por
+# 
+# por_pred_grid_q1 <- dat_por %>%
+#   distinct(habitat, pre_post_f)
+# 
+# por_pred_grid_q1$predicted <- predict(q1_por, newdata = por_pred_grid_q1,
+#                                       type = "response", re.form = NA)
+# 
+# por_pred_grid_q1
 
 
-## Kylie
-coral_por_hab$fit.Surv <- predict(coral_surv_mod, type = "response", re.form = NA)
+# Combine for plotting 
 
+q1_pred_all <- bind_rows(
+  acr_pred_grid_q1 %>% mutate(taxa = "Acropora"),
+  poc_pred_grid_q1 %>% mutate(taxa = "Pocillopora"),
+  por_pred_grid_q1 %>% mutate(taxa = "Porites")
+) %>%
+  mutate(
+    taxa       = factor(taxa, levels = c("Acropora", "Pocillopora", "Porites")),
+    pre_post_f = factor(pre_post_f, levels = c("Pre", "Post"))
+  )
+
+
+# Bar plot 
+# ******predict() gives point estimates only... so no se (how to get??), use emmeans??
+# For se bars need emmeans() or bootstrap 
+
+period_colors <- c(Pre = "#4e9af1", Post = "#f17a4e")
+
+# Combine
+q1_pred_all <- bind_rows(
+  acr_pred_grid_q1 %>% mutate(taxa = "Acropora"),
+  poc_pred_grid_q1 %>% mutate(taxa = "Pocillopora"),
+  por_pred_grid_q1 %>% mutate(taxa = "Porites")
+) %>%
+  mutate(
+    taxa       = factor(taxa, levels = c("Acropora", "Pocillopora", "Porites")),
+    pre_post_f = factor(pre_post_f, levels = c("Pre", "Post"))
+  )
+
+# Plot
+ggplot(q1_pred_all,
+       aes(x = habitat, y = predicted, fill = pre_post_f)) +
+  geom_col(position = position_dodge(width = 0.75),
+           width = 0.65, colour = "white", linewidth = 0.3) +
+  geom_errorbar(
+    aes(ymin = predicted - 1.96 * se,
+        ymax = predicted + 1.96 * se),
+    position = position_dodge(width = 0.75),
+    width = 0.25, linewidth = 0.6
+  ) +
+  facet_wrap(~ taxa, scales = "free_y", ncol = 3) +
+  scale_fill_manual(
+    values = c(Pre = "#4e9af1", Post = "#f17a4e"),
+    name   = "Period",
+    labels = c(Pre = "Pre-bleaching (2013-2018)",
+               Post = "Post-bleaching (2019-2024)")
+  ) +
+  labs(
+    title = "Island-wide coral recruitment by habitat and bleaching period",
+    x     = "Habitat",
+    y     = "Predicted recruits per 5 m^2"
+  ) +
+  theme_bw(base_size = 13) +
+  theme(legend.position = "bottom")
 
 ```
+Bleaching hit recruitment hard across all three taxa and both habitats. Acr and Poc follow the same habitat preference (OR > BR pre-bleaching, both crash post-bleaching). Por is the differing one; it's a back reef recruiter that was devastated. Wide CI on Porites BR Pre reflects genuine high variability in that cell.
+
 
 ## Model Validation
 ```{r}
@@ -209,9 +312,10 @@ coral_por_hab$fit.Surv <- predict(coral_surv_mod, type = "response", re.form = N
 
 # 2. Residual diagnostics (outliers, non-normality, or deviations)
 
-# 3. 
 
 ```
+
+
 
 
 
