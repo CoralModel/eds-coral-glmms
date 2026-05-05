@@ -1,0 +1,391 @@
+---
+title: "Coral Growth — Size-Dependent Growth Rate Analysis"
+subtitle: "GLMM analysis of proportional growth rates by taxa, site, habitat, and bleaching period"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    self-contained: true
+editor: visual
+---
+
+# Overview
+
+This document models **size-dependent proportional growth rates** for three coral taxa (*Acropora*, *Pocillopora*, *Porites*) using generalized linear mixed models (GLMMs) fitted with `glmmTMB`.
+
+Two research questions are addressed:
+
+1.  **Model 1 (Habitat):** Does size-dependent growth rate differ between forereef and backreef habitats around the island before and after the 2019 bleaching event?
+2.  **Model 2 (Site × Habitat):** Does size-dependent growth rate differ across all site-habitat combinations (LTER1 backreef, LTER1 forereef, LTER2 backreef, LTER2 forereef, etc.) before and after the 2019 bleaching event, island-wide?
+
+**Reference group for all models:** backreef (Model 1) or LTER1 backreef (Model 2), before bleaching.
+
+All models use `log(size_t1)` as the response variable, with `log(size_t0)` as a covariate. The coefficient on `log_size_t0` captures the size-dependence of growth.
+
+------------------------------------------------------------------------
+
+# Setup
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(glmmTMB)
+```
+
+------------------------------------------------------------------------
+
+# Data Preparation
+
+## Load & Clean
+
+```{r}
+#| label: load-clean
+#| message: false
+#| warning: false
+
+volume_coral <- read_csv(here::here("..", "eds-coral-data-storage-management", "data", "volume_corals.csv"))
+
+glimpse(volume_coral)
+```
+
+For each coral, look at its years in order and check if there's ever a jump of more than 1 year between observations. If so, keep all rows for that coral. The result is a dataset of only the corals that "disappeared" for at least one survey year and reappeared later - this would indicate recruitment of the same species at the exact location where another had died.
+
+```{r}
+# For each coral_number, check if years are non-consecutive (gap = died & same species recruited)
+gaps <- volume_coral |>
+  arrange(coral_number, year) |>
+  group_by(coral_number) |>
+  filter(any(diff(year) > 1)) |> # any() Given set of logical vectors, is at least one value true? 
+  ungroup()                      # diff() calculates difference between years 
+  
+
+# total number of instances where this took place 
+n_distinct(gaps$coral_number)
+
+```
+
+```{r}
+# Flag coral_numbers where size drops dramatically (e.g., large coral -> tiny recruit)
+resets <- volume_coral |>
+  select(year, site, habitat, transect_id, coral_number, size_t0, size_t1) %>% 
+  arrange(coral_number, year) |>
+  group_by(coral_number) |>
+  mutate(pct_change = (size_t1 - size_t0) / size_t0) |>
+  filter(pct_change < -0.95) |>
+  ungroup()
+
+reset_ids <- resets |> pull(coral_number) |> unique()
+
+resets <- volume_coral |>
+  filter(coral_number %in% reset_ids) |>
+  select(year, coral_number, size_t0, size_t1, dyn_death, dyn_recruitment) |>
+  arrange(coral_number, year)
+```
+
+```{r}
+volume_coral <- volume_coral |>
+  arrange(coral_number, year) |>
+  group_by(coral_number) |>
+  mutate(year_t1 = lead(year)) |>
+  ungroup()
+```
+
+## Filter & Model Preparation
+
+```{r}
+#| label: filter-data
+
+# Exclusion criteria:
+# - Millepora excluded (insufficient sample size)
+# - Require both size measurements (t0 and t1 non-missing)
+# - Only consecutive year pairs (year_t1 - year == 1)
+# - Remove zero/negative volumes (measurement errors)
+# - Remove implausible growth ratios: >10x or <0.1x annual change
+#   (confirmed as measurement error — spread across all years/taxa,
+#    not concentrated around 2019 bleaching event)
+growth_data <- volume_coral |>
+  filter(
+    taxa != "Mil",
+    !is.na(size_t0), 
+    !is.na(size_t1),
+    !is.na(year_t1), 
+    year_t1 - year == 1,  # consecutive years only
+    size_t0 > 0, size_t1 > 0) |>
+  mutate(
+    # Set reference levels
+    taxa        = relevel(factor(taxa),    ref = "Acr"),
+    habitat     = relevel(factor(habitat), ref = "BR"),
+    site        = relevel(factor(site),    ref = "LTER1"),
+    period = factor(period), 
+    # Log-transform size variables
+    log10_size_t0 = log10(size_t0),
+    log10_size_t1 = log10(size_t1)
+  )
+
+# Split by taxa for separate models
+growth_acr <- growth_data |> filter(taxa == "Acr")
+growth_poc <- growth_data |> filter(taxa == "Poc")
+growth_por <- growth_data |> filter(taxa == "Por")
+
+# Check the range of growth ratios now in por
+growth_por |>
+  mutate(growth_ratio = size_t1 / size_t0) |>
+  summarise(min = min(growth_ratio), max = max(growth_ratio),
+            n_extreme = sum(growth_ratio > 10 | growth_ratio < 0.1))
+
+# Are the extremes concentrated in a particular year/site/habitat?
+growth_por |>
+  mutate(growth_ratio = size_t1 / size_t0) |>
+  filter(growth_ratio > 10 | growth_ratio < 0.1) |>
+  count(year, site, habitat)
+```
+
+------------------------------------------------------------------------
+
+# Model 1: Habitat-Level Growth Before/After Bleaching
+
+**Question:** Does size-dependent growth rate differ between forereef and backreef habitats before and after the 2019 bleaching event?
+
+**Fixed effects:** `log_size_t0 * habitat * period`
+
+**Random effects:** Colonies nested in transects nested in sites `(1 | site/transect_id/coral_number)` + inter-annual variation `(1 | year)`
+
+**Reference group:** Backreef, before bleaching.
+
+## Fit Models
+
+```{r}
+#| label: m1-fit
+#| message: false
+#| warning: false
+
+m1_acr <- glmmTMB(
+  log10_size_t1 ~ log10_size_t0 * habitat * period +
+    (1 | site/transect_id/coral_number) + (1 | year),
+  family = gaussian(),
+  data   = growth_acr
+)
+
+m1_poc <- glmmTMB(
+  log10_size_t1 ~ log10_size_t0 * habitat * period +
+    (1 | site/transect_id/coral_number) + (1 | year),
+  family = gaussian(),
+  data   = growth_poc
+)
+
+m1_por <- glmmTMB(
+  log10_size_t1 ~ log10_size_t0 * habitat * period +
+    (1 | site/transect_id/coral_number) + (1 | year),
+  family = gaussian(),
+  data   = growth_por
+)
+```
+
+## Model Summaries
+
+```{r}
+#| label: m1-summaries
+
+summary(m1_acr)
+summary(m1_poc)
+summary(m1_por)
+```
+
+------------------------------------------------------------------------
+
+```{r}
+#| label: m1-predictions
+# M1 prediction grids — population-level, no random effects
+acr_pred_grid_m1 <- growth_acr |>
+  distinct(habitat, period) |>
+  crossing(log10_size_t0 = seq(min(growth_acr$log10_size_t0),
+                               max(growth_acr$log10_size_t0),
+                               length.out = 100))
+acr_pred_grid_m1$pred_log10_t1 <- predict(m1_acr, newdata = acr_pred_grid_m1,
+                                           type = "response", re.form = NA)
+
+poc_pred_grid_m1 <- growth_poc |>
+  distinct(habitat, period) |>
+  crossing(log10_size_t0 = seq(min(growth_poc$log10_size_t0),
+                               max(growth_poc$log10_size_t0),
+                               length.out = 100))
+poc_pred_grid_m1$pred_log10_t1 <- predict(m1_poc, newdata = poc_pred_grid_m1,
+                                           type = "response", re.form = NA)
+
+por_pred_grid_m1 <- growth_por |>
+  distinct(habitat, period) |>
+  crossing(log10_size_t0 = seq(min(growth_por$log10_size_t0),
+                               max(growth_por$log10_size_t0),
+                               length.out = 100))
+por_pred_grid_m1$pred_log10_t1 <- predict(m1_por, newdata = por_pred_grid_m1,
+                                           type = "response", re.form = NA)
+
+```
+
+```{r}
+#| label: m1-plots
+ggplot() +
+  geom_point(data = growth_acr,
+             aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
+  geom_line(data = acr_pred_grid_m1,
+            aes(x = log10_size_t0, y = pred_log10_t1, color = period), linewidth = 1) +
+  facet_grid(~ habitat, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                     labels = c("0" = "Before bleaching", "1" = "After bleaching")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  theme_bw() +
+  labs(title = "Acropora Growth", x = "Initial size (cm³)", y = "Final size (cm³)", color = "Period")
+
+ggplot() +
+  geom_point(data = growth_poc,
+             aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
+  geom_line(data = poc_pred_grid_m1,
+            aes(x = log10_size_t0, y = pred_log10_t1, color = period), linewidth = 1) +
+  facet_grid(~ habitat, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                     labels = c("0" = "Before bleaching", "1" = "After bleaching")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  theme_bw() +
+  labs(title = "Pocillopora Growth", x = "Initial size (cm³)", y = "Final size (cm³)", color = "Period")
+
+ggplot() +
+  geom_point(data = growth_por,
+             aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
+  geom_line(data = por_pred_grid_m1,
+            aes(x = log10_size_t0, y = pred_log10_t1, color = period), linewidth = 1) +
+  facet_grid(~ habitat, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                     labels = c("0" = "Before bleaching", "1" = "After bleaching")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  theme_bw() +
+  labs(title = "Porites Growth", x = "Initial size (cm³)", y = "Final size (cm³)", color = "Period")
+
+   
+```
+
+# Model 2: Island-Wide Growth by Site × Habitat Before/After Bleaching
+
+**Question:** Does size-dependent growth rate differ across all site-habitat combinations (LTER1 backreef, LTER1 forereef, LTER2 backreef, LTER2 forereef, etc.) before and after the 2019 bleaching event, island-wide?
+
+**Fixed effects:** `log_size_t0 * site * habitat * period`
+
+**Random effects:** Colonies nested in transects `(1 | transect_id/coral_number)` + inter-annual variation `(1 | year)`
+
+Note: Site is included as a **fixed effect** here because the question explicitly compares specific named sites. Transect nesting is simplified to `transect_id/coral_number` since site is already captured in the fixed effects and in `transect_id`.
+
+**Reference group:** LTER1 backreef, before bleaching.
+
+## Fit Models
+
+```{r}
+#| label: m2-fit
+#| message: false
+#| warning: false
+
+m2_acr <- glmmTMB(
+  log10_size_t1 ~ log10_size_t0 * site * habitat * period +
+    (1 | transect_id/coral_number) + (1 | year),
+  family = gaussian(),
+  data   = growth_acr
+)
+
+m2_poc <- glmmTMB(
+  log10_size_t1 ~ log10_size_t0 * site * habitat * period +
+    (1 | transect_id/coral_number) + (1 | year),
+  family = gaussian(),
+  data   = growth_poc
+)
+
+m2_por <- glmmTMB(
+  log10_size_t1 ~ log10_size_t0 * site * habitat * period +
+    (1 | transect_id/coral_number) + (1 | year),
+  family = gaussian(),
+  data   = growth_por
+)
+```
+
+## Model Summaries
+
+```{r}
+#| label: m2-summaries
+
+summary(m2_acr)
+summary(m2_poc)
+summary(m2_por)
+```
+
+```{r}
+#| label: m2-predictions
+acr_pred_grid_m2 <- growth_acr |>
+  distinct(site, habitat, period) |>
+  crossing(log10_size_t0 = seq(min(growth_acr$log10_size_t0),
+                               max(growth_acr$log10_size_t0),
+                               length.out = 100))
+acr_pred_grid_m2$pred_log10_t1 <- predict(m2_acr, newdata = acr_pred_grid_m2,
+                                           type = "response", re.form = NA)
+
+poc_pred_grid_m2 <- growth_poc |>
+  distinct(site, habitat, period) |>
+  crossing(log10_size_t0 = seq(min(growth_poc$log10_size_t0),
+                               max(growth_poc$log10_size_t0),
+                               length.out = 100))
+poc_pred_grid_m2$pred_log10_t1 <- predict(m2_poc, newdata = poc_pred_grid_m2,
+                                           type = "response", re.form = NA)
+
+por_pred_grid_m2 <- growth_por |>
+  distinct(site, habitat, period) |>
+  crossing(log10_size_t0 = seq(min(growth_por$log10_size_t0),
+                               max(growth_por$log10_size_t0),
+                               length.out = 100))
+por_pred_grid_m2$pred_log10_t1 <- predict(m2_por, newdata = por_pred_grid_m2,
+                                           type = "response", re.form = NA)
+```
+
+```{r}
+#| label: m2-plots
+ggplot() +
+  geom_point(data = growth_acr,
+             aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
+  geom_line(data = acr_pred_grid_m2,
+            aes(x = log10_size_t0, y = pred_log10_t1, color = period)) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                     labels = c("0" = "Before bleaching", "1" = "After bleaching")) +
+  facet_grid(habitat ~ site, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  labs(x = "Initial size (cm³)", y = "Final size (cm³)", title = "Acropora Growth", color = "Period") +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  theme_bw()
+
+ggplot() +
+  geom_point(data = growth_poc,
+             aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
+  geom_line(data = poc_pred_grid_m2,
+            aes(x = log10_size_t0, y = pred_log10_t1, color = period)) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                     labels = c("0" = "Before bleaching", "1" = "After bleaching")) +
+  facet_grid(habitat ~ site, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  labs(x = "Initial size (cm³)", y = "Final size (cm³)", title = "Pocillopora Growth", color = "Period") +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  theme_bw()
+
+ggplot() +
+  geom_point(data = growth_por,
+             aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
+  geom_line(data = por_pred_grid_m2,
+            aes(x = log10_size_t0, y = pred_log10_t1, color = period)) +
+  scale_color_manual(values = c("0" = "dodgerblue", "1" = "red"),
+                     labels = c("0" = "Before bleaching", "1" = "After bleaching")) +
+  facet_grid(habitat ~ site, labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  labs(x = "Initial size (cm³)", y = "Final size (cm³)", title = "Porites Growth", color = "Period") +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  scale_y_continuous(labels = scales::label_math(10^.x)) +
+  theme_bw()
+```
