@@ -110,13 +110,14 @@ cat("Q1 Acr ~ habitat * pre_post_f | site/transect_id + year\n")
 cat("Family: Poisson\n")
 
 q1_acr <- glmmTMB(
-  recruits_int ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
-  family    = nbinom2,
+  recruits_std ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
+  family    = tweedie(link = "log"),
   data      = dat_acr,
   na.action = na.exclude
 )
 
 summary(q1_acr)
+
 ```
 Pre-bleaching, OR recruited much more than BR (habitat OR is 3.06 on log scale and significant). The gap shrank post-bleaching. 
 
@@ -150,6 +151,10 @@ acr_se <- predict(q1_acr, newdata = acr_pred_grid_q1,
                   type = "response", re.form = NA, se.fit = TRUE)
 acr_pred_grid_q1$se <- acr_se$se.fit
 
+# Get estimate on link scale and then get se since only on link scale and then convert to response space 
+# tweedie distribution (keep in decimal format, no transformation (inflated zero), hurdle model too)(has zero inflation built in for hurdle)
+
+
 ```
 
 
@@ -160,13 +165,14 @@ cat("Q1 Poc ~ habitat * pre_post_f | site/transect_id + year\n")
 cat("Family: nbinom2\n")
 
 q1_poc <- glmmTMB(
-  recruits_int ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
-  family    = nbinom2,
+  recruits_std ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
+  family    = tweedie(link = "log"),
   data      = dat_poc,
   na.action = na.exclude
 )
 
 summary(q1_poc)
+
 
 # Same for poc 
 poc_pred_grid_q1 <- dat_poc %>%
@@ -193,8 +199,8 @@ cat("Family: nbinom2\n")
 
 
 q1_por <- glmmTMB(
-  recruits_int ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
-  family    = nbinom2,
+  recruits_std ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
+  family    = tweedie(link = "log"),
   data      = dat_por,
   na.action = na.exclude
 )
@@ -217,7 +223,7 @@ por_pred_grid_q1$se <- por_se$se.fit
 Opposite pattern seen: BR recruited much more than OR pre-bleaching (habitatOR = -1.91 and is significant). 
 Both habitats dropped post bleaching (pre_post is significant); however, the gap is not significant since interaction is not significant. 
 
-## Graphing Predicted Estimates
+### Graphing Predicted Estimates
 ```{r}
 # Prediction grids 
 # recruits_int ~ habitat * pre_post_f + (1|site/transect_id) + (1|year)
@@ -275,7 +281,7 @@ q1_pred_all <- bind_rows(
   )
 
 # Plot
-ggplot(q1_pred_all,
+ggplot(q1_pred_all %>% filter(taxa != "Acropora"), 
        aes(x = habitat, y = predicted, fill = pre_post_f)) +
   geom_col(position = position_dodge(width = 0.75),
            width = 0.65, colour = "white", linewidth = 0.3) +
@@ -304,6 +310,67 @@ ggplot(q1_pred_all,
 Bleaching hit recruitment hard across all three taxa and both habitats. Acr and Poc follow the same habitat preference (OR > BR pre-bleaching, both crash post-bleaching). Por is the differing one; it's a back reef recruiter that was devastated. Wide CI on Porites BR Pre reflects genuine high variability in that cell.
 
 
+
+## Model 2: Do site × habitat differences in recruitment vary between pre and post-bleaching periods?
+    
+Formula: site * habitat * pre_post_f + (1|transect_id) + (1|year)
+
+### Acropora 
+```{r}
+cat("Q2A Acr ~ site * habitat * pre_post_f | transect_id + year\n")
+
+q2a_acr <- glmmTMB(
+  recruits_std ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
+  family    = tweedie(link = "log"),
+  data      = dat_acr,
+  na.action = na.exclude
+)
+
+summary(q2a_acr)
+
+```
+
+
+### Pocilopora 
+```{r}
+cat("Q2A Poc ~ site * habitat * pre_post_f | transect_id + year\n")
+q2a_poc <- glmmTMB(
+  recruits_std ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
+  family    = tweedie(link = "log"),
+  data      = dat_poc,
+  na.action = na.exclude
+)
+summary(q2a_poc)
+```
+
+### Porites
+```{r}
+cat("Q2A Por ~ site * habitat * pre_post_f | transect_id + year\n")
+q2a_por <- glmmTMB(
+  recruits_std ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
+  family    = tweedie(link = "log"),
+  data      = dat_por,
+  na.action = na.exclude
+)
+
+summary(q2a_por)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Model Validation
 ```{r}
 # Model validation 
@@ -311,7 +378,10 @@ Bleaching hit recruitment hard across all three taxa and both habitats. Acr and 
 # 1. for negative binomial, we will need to test for the overdispersion (qqplot), heteroscedacity, and zero-inflation
 
 # 2. Residual diagnostics (outliers, non-normality, or deviations)
+# Plot of predicted vs actual, should not see any curvature, will get noise but on the line mostly 
 
+# Q2A (data never really matches the model... how different is the model from the assumption)
+# switch to tweedie model for #Q2a.. try tweedie() 
 
 ```
 
