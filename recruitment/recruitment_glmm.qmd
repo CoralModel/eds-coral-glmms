@@ -11,17 +11,18 @@ This document details the analysis of coral recruitment for three different taxa
 
 **What are island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora between the backreef and forereef before and after the bleaching event?**
 
+## Data Preparation
 
-## Data Preparation 
 ### Load and Clean
-The following packages were required prior to conducting additional data wrangling: 
+
+The following packages were required prior to conducting additional data wrangling:
+
 ```{r}
 library(tidyverse) # For tidy data
 library(glmmTMB) # For GLMM model 
 library(ggeffects) # For calculating marginal effects of each model 
 library(DHARMa) # For model checks and validation 
 ```
-
 
 Then, the cleaned data (referenced from a separate repository) was loaded in.
 
@@ -32,7 +33,7 @@ clean_coral <- read_csv(
 str(clean_coral)
 ```
 
-Standardize recruitment for every 5 meters squared. 
+Standardize recruitment for every 5 meters squared.
 
 ```{r}
 # Summarize standard recruits to site-habitat-transect and year level 
@@ -61,14 +62,12 @@ view(recruit_transect)
 # No NAs
 ```
 
-
 ```{r}
 # Create filtered datasets for each taxa
 dat_acr <- recruit_transect %>% filter(taxa == "Acr")
 dat_poc <- recruit_transect %>% filter(taxa == "Poc")
 dat_por <- recruit_transect %>% filter(taxa == "Por")
 ```
-
 
 ```{r}
 # Exploratory bar chart 
@@ -98,19 +97,20 @@ recruit_transect %>%
 
 ```
 
+## Model 1: Island wide habitat x period
 
-## Model 1: Island wide habitat x period 
-- **Formula: habitat * pre_post_f + (1|site/transect_id) + (1|year)**
-- **site/transect_id: sites pooled as random... island-wide habitat question**
-- **year crossed random effect: absorbs annual variation**
+-   **Formula: habitat \* pre_post_f + (1\|site/transect_id) + (1\|year)**
+-   **site/transect_id: sites pooled as random... island-wide habitat question**
+-   **year crossed random effect: absorbs annual variation**
 
 ### Acropora
+
 ```{r}
 cat("Q1 Acr ~ habitat * pre_post_f | site/transect_id + year\n")
 cat("Family: Poisson\n")
 
 q1_acr <- glmmTMB(
-  recruits_std ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
+  recruits_std ~ habitat * pre_post_f ,
   family    = tweedie(link = "log"),
   data      = dat_acr,
   na.action = na.exclude
@@ -119,7 +119,8 @@ q1_acr <- glmmTMB(
 summary(q1_acr)
 
 ```
-Pre-bleaching, OR recruited much more than BR (habitat OR is 3.06 on log scale and significant). The gap shrank post-bleaching. 
+
+Pre-bleaching, OR recruited much more than BR (habitat OR is 3.06 on log scale and significant). The gap shrank post-bleaching.
 
 ```{r}
 # Acropora 
@@ -157,8 +158,8 @@ acr_pred_grid_q1$se <- acr_se$se.fit
 
 ```
 
-
 ### Pocillopera
+
 ```{r}
 # Poc
 cat("Q1 Poc ~ habitat * pre_post_f | site/transect_id + year\n")
@@ -186,12 +187,12 @@ poc_pred_grid_q1$predicted <- predict(q1_poc, newdata = poc_pred_grid_q1,
 
 poc_pred_grid_q1$predicted
 poc_pred_grid_q1$se <- poc_se$se.fit
-
 ```
 
-Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p < .05). OR recruitment seemed to drop significantly post bleaching. 
+Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p \< .05). OR recruitment seemed to drop significantly post bleaching.
 
 ### Porites
+
 ```{r}
 # Por 
 cat("Q1 Por ~ habitat * pre_post_f | site/transect_id + year\n")
@@ -207,6 +208,7 @@ q1_por <- glmmTMB(
 
 summary(q1_por)
 ```
+
 ```{r}
 por_pred_grid_q1 <- dat_por %>%
   distinct(habitat, pre_post_f)
@@ -220,10 +222,10 @@ por_se <- predict(q1_por, newdata = por_pred_grid_q1,
 por_pred_grid_q1$se <- por_se$se.fit
 ```
 
-Opposite pattern seen: BR recruited much more than OR pre-bleaching (habitatOR = -1.91 and is significant). 
-Both habitats dropped post bleaching (pre_post is significant); however, the gap is not significant since interaction is not significant. 
+Opposite pattern seen: BR recruited much more than OR pre-bleaching (habitatOR = -1.91 and is significant). Both habitats dropped post bleaching (pre_post is significant); however, the gap is not significant since interaction is not significant.
 
 ### Graphing Predicted Estimates
+
 ```{r}
 # Prediction grids 
 # recruits_int ~ habitat * pre_post_f + (1|site/transect_id) + (1|year)
@@ -285,12 +287,6 @@ ggplot(q1_pred_all %>% filter(taxa != "Acropora"),
        aes(x = habitat, y = predicted, fill = pre_post_f)) +
   geom_col(position = position_dodge(width = 0.75),
            width = 0.65, colour = "white", linewidth = 0.3) +
-  geom_errorbar(
-    aes(ymin = predicted - 1.96 * se,
-        ymax = predicted + 1.96 * se),
-    position = position_dodge(width = 0.75),
-    width = 0.25, linewidth = 0.6
-  ) +
   facet_wrap(~ taxa, scales = "free_y", ncol = 3) +
   scale_fill_manual(
     values = c(Pre = "#4e9af1", Post = "#f17a4e"),
@@ -307,15 +303,15 @@ ggplot(q1_pred_all %>% filter(taxa != "Acropora"),
   theme(legend.position = "bottom")
 
 ```
-Bleaching hit recruitment hard across all three taxa and both habitats. Acr and Poc follow the same habitat preference (OR > BR pre-bleaching, both crash post-bleaching). Por is the differing one; it's a back reef recruiter that was devastated. Wide CI on Porites BR Pre reflects genuine high variability in that cell.
 
-
+Bleaching hit recruitment hard across all three taxa and both habitats. Acr and Poc follow the same habitat preference (OR \> BR pre-bleaching, both crash post-bleaching). Por is the differing one; it's a back reef recruiter that was devastated. Wide CI on Porites BR Pre reflects genuine high variability in that cell.
 
 ## Model 2: Do site × habitat differences in recruitment vary between pre and post-bleaching periods?
-    
-Formula: site * habitat * pre_post_f + (1|transect_id) + (1|year)
 
-### Acropora 
+Formula: site \* habitat \* pre_post_f + (1\|transect_id) + (1\|year)
+
+### Acropora
+
 ```{r}
 cat("Q2A Acr ~ site * habitat * pre_post_f | transect_id + year\n")
 
@@ -327,11 +323,10 @@ q2a_acr <- glmmTMB(
 )
 
 summary(q2a_acr)
-
 ```
 
+### Pocilopora
 
-### Pocilopora 
 ```{r}
 cat("Q2A Poc ~ site * habitat * pre_post_f | transect_id + year\n")
 q2a_poc <- glmmTMB(
@@ -341,9 +336,13 @@ q2a_poc <- glmmTMB(
   na.action = na.exclude
 )
 summary(q2a_poc)
+
+# predictions get standard erorrs, conversion to response space
+
 ```
 
 ### Porites
+
 ```{r}
 cat("Q2A Por ~ site * habitat * pre_post_f | transect_id + year\n")
 q2a_por <- glmmTMB(
@@ -354,27 +353,16 @@ q2a_por <- glmmTMB(
 )
 
 summary(q2a_por)
-
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Model Validation
+
 ```{r}
 # Model validation 
 ## Model validation and assumptions 
+
+
+
 # 1. for negative binomial, we will need to test for the overdispersion (qqplot), heteroscedacity, and zero-inflation
 
 # 2. Residual diagnostics (outliers, non-normality, or deviations)
@@ -384,8 +372,3 @@ summary(q2a_por)
 # switch to tweedie model for #Q2a.. try tweedie() 
 
 ```
-
-
-
-
-
