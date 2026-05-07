@@ -98,9 +98,9 @@ recruit_transect %>%
        x = "Year", y = "Recruits per 5 m²") + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
 ```
 
-## Model 1: Habitat level recruitment befor and after bleaching
+## Model 1: Habitat level recruitment through time
 
--   **Formula: habitat \* year + (1\|site/transect_id**
+-   **Formula: habitat \* year + (1\|site/transect_id)**
 -   **site/transect_id: sites pooled as random... island-wide habitat question**
 -   **year crossed random effect: absorbs annual variation**
 
@@ -241,6 +241,7 @@ Bleaching hit recruitment hard across all three taxa and both habitats. Acr and 
 #### Model Validation
 
 
+
 ## Model 2: Island-wide recruitment by site x habitat before and after bleaching 
 Do site × habitat differences in recruitment vary between pre and post-bleaching periods?
 
@@ -259,10 +260,6 @@ q2a_acr <- glmmTMB(
 )
 
 summary(q2a_acr)
-hist(dat_acr$recruits_std, breaks = 20)
-hist(dat_por$recruits_std, breaks = 20)
-hist(dat_poc$recruits_std, breaks = 20)
-
 
 ```
 
@@ -270,6 +267,7 @@ hist(dat_poc$recruits_std, breaks = 20)
 
 ```{r}
 cat("Q2A Poc ~ site * habitat * factor(year) | transect_id\n")
+
 q2a_poc <- glmmTMB(
   recruits_std ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
   family    = tweedie(link = "log"),
@@ -277,15 +275,10 @@ q2a_poc <- glmmTMB(
   na.action = na.exclude
 )
 summary(q2a_poc)
-# q2a_poc <- glmmTMB(
-#   recruits_std ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
-#   family    = tweedie(link = "log"),
-#   data      = dat_poc,
-#   na.action = na.exclude
-# )
-# summary(q2a_poc)
 
-# predictions get standard erorrs, conversion to response space
+# predictions to get standard errors, conversion to response space!!! 
+
+
 
 ```
 
@@ -302,4 +295,7 @@ q2a_por <- glmmTMB(
 
 summary(q2a_por)
 ```
+
+
+
 
