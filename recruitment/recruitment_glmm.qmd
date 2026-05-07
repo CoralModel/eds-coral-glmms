@@ -9,7 +9,7 @@ format: html
 
 This document details the analysis of coral recruitment for three different taxa based on survey data recorded over nearly a decade by Dr. Hunter Lenihan for the Mo'orea Long Term Ecological Network site (MCR-LTER). The purpose of this analysis is to serve as a supporting walk through for understanding recruitment as one of three demographic profiles impacted by the 2019 bleaching event. The following question was utilized to guide the analysis:
 
-**What are island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora between the backreef and forereef before and after the bleaching event?**
+**What are island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora from 2013-2024?**
 
 ## Data Preparation
 
@@ -28,7 +28,7 @@ Then, the cleaned data (referenced from a separate repository) was loaded in.
 
 ```{r}
 clean_coral <- read_csv(
-  "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/coral_demography_analysis_data.csv"
+  "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/coral_demography_analysis_data.csv", guess_max = 1000
   # coral_demography_analysis_data.csv
 )
 str(clean_coral)
@@ -100,92 +100,28 @@ recruit_transect %>%
 
 ## Model 1: Habitat level recruitment befor and after bleaching
 
--   **Formula: habitat \* pre_post_f + (1\|site/transect_id) + (1\|year)**
+-   **Formula: habitat \* year + (1\|site/transect_id**
 -   **site/transect_id: sites pooled as random... island-wide habitat question**
 -   **year crossed random effect: absorbs annual variation**
 
-### Acropora
 
-```{r}
-## Fit a predicted line for each eyear 
+**Get estimate on link scale and then get se since only on link scale and then convert to response space 
+** tweedie distribution (keep in decimal format, no transformation (inflated zero), hurdle model too)(has zero inflation built in for hurdle)
 
-cat("Q1 Acr ~ habitat * pre_post_f | site/transect_id + year\n")
-cat("Family: Poisson\n")
-
-q1_acr <- glmmTMB(
-  recruits_std ~ habitat * pre_post_f ,
-  family    = tweedie(link = "log"),
-  data      = dat_acr,
-  na.action = na.exclude
-)
-
-q1_acr_year <- glmmTMB(
-  recruits_std ~ habitat * factor(year) + (1 | site/transect_id),
-  family    = tweedie(link = "log"),
-  data      = dat_acr,
-  na.action = na.exclude
-)
-
-summary(q1_acr_year)
-
-summary(q1_acr)
-
-
-```
-
-Pre-bleaching, OR recruited much more than BR (habitat OR is 3.06 on log scale and significant). The gap shrank post-bleaching.
-
-```{r}
-# Acropora 
-acr_pred_grid_q1 <- dat_acr %>%
-  distinct(habitat, pre_post_f)
-
-acr_pred_grid_q1$predicted <- predict(q1_acr, newdata = acr_pred_grid_q1,
-                                      type = "response", re.form = NA)
-
-acr_pred_grid_q1$predicted
-
-
-### manual math
-# BR Pre = intercept only (ref level)
-exp(-3.8370)      # = 0.0216 (match)
-
-# BR Post = intercept + post effect
-exp(-3.8370 + 0.8367) # = 0.0498 (match)
-
-# OR Pre  = intercept + OR effect
-exp(-3.8370 + 3.0602)  # = 0.460  (match)
-
-# OR Post = intercept + OR + post + interaction
-exp(-3.8370 + 3.0602 + 0.8367 + (-1.5736))   # = 0.220  (match)
-
-
-# Add se to grid
-acr_se <- predict(q1_acr, newdata = acr_pred_grid_q1,
-                  type = "response", re.form = NA, se.fit = TRUE)
-acr_pred_grid_q1$se <- acr_se$se.fit
-
-# Get estimate on link scale and then get se since only on link scale and then convert to response space 
-# tweedie distribution (keep in decimal format, no transformation (inflated zero), hurdle model too)(has zero inflation built in for hurdle)
-
-
-```
 
 ### Pocillopera
 
 ```{r}
 # Poc
-cat("Q1 Poc ~ habitat * pre_post_f | site/transect_id + year\n")
-cat("Family: nbinom2\n")
+cat("Q1: Poc ~ habitat * year | site/transect_id" )
+cat("Family: tweedie\n")
 
-q1_poc <- glmmTMB(
-  recruits_std ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
-  family    = tweedie(link = "log"),
-  data      = dat_poc,
-  na.action = na.exclude
-)
-
-summary(q1_poc)
+# q1_poc <- glmmTMB(
+#   recruits_std ~ habitat * pre_post_f + (1 | site/transect_id) + (1 | year),
+#   family    = tweedie(link = "log"),
+#   data      = dat_poc,
+#   na.action = na.exclude
+# )
 
 q1_poc_year <- glmmTMB(
   recruits_std ~ habitat * factor(year) + (1 | site/transect_id),
@@ -194,40 +130,48 @@ q1_poc_year <- glmmTMB(
   na.action = na.exclude
 )
 
-summary(q1_poc_year)
-
-# Same for poc 
-q1_poc_year <- glmmTMB(
-  recruits_std ~ habitat * factor(year) + (1 | site/transect_id),
-  family    = tweedie(link = "log"),
-  data      = dat_poc,
-  na.action = na.exclude
-)
-
-summary(q1_poc_year)
-
-poc_pred_grid_year <-  dat_poc %>%
-  distinct(habitat, pre_post_f)
-
-
-
-######_____________
-
-poc_pred_grid_q1 <- dat_poc %>%
-  distinct(habitat, pre_post_f)
-
-poc_se <- predict(q1_poc, newdata = poc_pred_grid_q1,
-                  type = "response", re.form = NA, se.fit = TRUE)
-
-poc_pred_grid_q1$predicted <- predict(q1_poc, newdata = poc_pred_grid_q1,
-                                      type = "response", re.form = NA)
-
-####_______________________________
-poc_pred_grid_q1$predicted
-poc_pred_grid_q1$se <- poc_se$se.fit
+summary(q1_poc_year) 
 ```
 
-Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p \< .05). OR recruitment seemed to drop significantly post bleaching.
+Interpretation: Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p \< .05). OR recruitment seemed to drop significantly post bleaching.
+
+```{r}
+# Prediction grid
+poc_pred_grid_year <- dat_poc %>%
+  distinct(habitat, year)
+
+poc_pred_grid_year$predicted <- predict(q1_poc_year, newdata = poc_pred_grid_year,type = "response", re.form = NA)
+
+poc_pred_grid_year$predicted
+
+# Need to extract the CI (se)
+```
+
+```{r}
+# Visualization
+# New prediction plot 
+# Plot predictions for Poc
+ggplot(poc_pred_grid_year, aes(x = factor(year), y = predicted, col = factor(habitat))) + 
+  geom_point() + geom_line(group = 1) + facet_wrap(~habitat) + theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  labs(title = "Island-wide Coral Recruitment by Habitat and Bleaching Period Per Taxa")
+```
+
+#### Model Validation
+```{r}
+# Model validation 
+## Model validation and assumptions 
+
+
+# 1. for negative binomial, we will need to test for the overdispersion (qqplot), heteroscedacity, and zero-inflation
+
+# 2. Residual diagnostics (outliers, non-normality, or deviations)
+# Plot of predicted vs actual, should not see any curvature, will get noise but on the line mostly 
+
+# Q2A (data never really matches the model... how different is the model from the assumption)
+# switch to tweedie model for #Q2a.. try tweedie() 
+```
+
 
 ### Porites
 
@@ -260,9 +204,19 @@ por_se <- predict(q1_por, newdata = por_pred_grid_q1,
 por_pred_grid_q1$se <- por_se$se.fit
 ```
 
+
+
 Opposite pattern seen: BR recruited much more than OR pre-bleaching (habitatOR = -1.91 and is significant). Both habitats dropped post bleaching (pre_post is significant); however, the gap is not significant since interaction is not significant.
 
-### Graphing Predicted Estimates
+
+
+
+```{r}
+
+```
+
+
+
 
 ```{r}
 # Prediction grids 
@@ -321,6 +275,9 @@ q1_pred_all <- bind_rows(
     taxa       = factor(taxa, levels = c("Acropora", "Pocillopora", "Porites")),
     pre_post_f = factor(pre_post_f, levels = c("Pre", "Post"))
   )
+
+
+
 
 # Plot
 ggplot(q1_pred_all, 
@@ -401,20 +358,3 @@ q2a_por <- glmmTMB(
 summary(q2a_por)
 ```
 
-## Model Validation
-
-```{r}
-# Model validation 
-## Model validation and assumptions 
-
-
-
-# 1. for negative binomial, we will need to test for the overdispersion (qqplot), heteroscedacity, and zero-inflation
-
-# 2. Residual diagnostics (outliers, non-normality, or deviations)
-# Plot of predicted vs actual, should not see any curvature, will get noise but on the line mostly 
-
-# Q2A (data never really matches the model... how different is the model from the assumption)
-# switch to tweedie model for #Q2a.. try tweedie() 
-
-```
