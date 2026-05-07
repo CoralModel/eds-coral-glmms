@@ -28,7 +28,8 @@ Then, the cleaned data (referenced from a separate repository) was loaded in.
 
 ```{r}
 clean_coral <- read_csv(
-  "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/volume_corals.csv"
+  "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/coral_demography_analysis_data.csv"
+  # coral_demography_analysis_data.csv
 )
 str(clean_coral)
 ```
@@ -97,7 +98,7 @@ recruit_transect %>%
 
 ```
 
-## Model 1: Island wide habitat x period
+## Model 1: Habitat level recruitment befor and after bleaching
 
 -   **Formula: habitat \* pre_post_f + (1\|site/transect_id) + (1\|year)**
 -   **site/transect_id: sites pooled as random... island-wide habitat question**
@@ -106,6 +107,8 @@ recruit_transect %>%
 ### Acropora
 
 ```{r}
+## Fit a predicted line for each eyear 
+
 cat("Q1 Acr ~ habitat * pre_post_f | site/transect_id + year\n")
 cat("Family: Poisson\n")
 
@@ -116,7 +119,17 @@ q1_acr <- glmmTMB(
   na.action = na.exclude
 )
 
+q1_acr_year <- glmmTMB(
+  recruits_std ~ habitat * factor(year) + (1 | site/transect_id),
+  family    = tweedie(link = "log"),
+  data      = dat_acr,
+  na.action = na.exclude
+)
+
+summary(q1_acr_year)
+
 summary(q1_acr)
+
 
 ```
 
@@ -174,8 +187,32 @@ q1_poc <- glmmTMB(
 
 summary(q1_poc)
 
+q1_poc_year <- glmmTMB(
+  recruits_std ~ habitat * factor(year) + (1 | site/transect_id),
+  family    = tweedie(link = "log"),
+  data      = dat_poc,
+  na.action = na.exclude
+)
+
+summary(q1_poc_year)
 
 # Same for poc 
+q1_poc_year <- glmmTMB(
+  recruits_std ~ habitat * factor(year) + (1 | site/transect_id),
+  family    = tweedie(link = "log"),
+  data      = dat_poc,
+  na.action = na.exclude
+)
+
+summary(q1_poc_year)
+
+poc_pred_grid_year <-  dat_poc %>%
+  distinct(habitat, pre_post_f)
+
+
+
+######_____________
+
 poc_pred_grid_q1 <- dat_poc %>%
   distinct(habitat, pre_post_f)
 
@@ -185,6 +222,7 @@ poc_se <- predict(q1_poc, newdata = poc_pred_grid_q1,
 poc_pred_grid_q1$predicted <- predict(q1_poc, newdata = poc_pred_grid_q1,
                                       type = "response", re.form = NA)
 
+####_______________________________
 poc_pred_grid_q1$predicted
 poc_pred_grid_q1$se <- poc_se$se.fit
 ```
@@ -269,6 +307,8 @@ q1_pred_all <- bind_rows(
 # ******predict() gives point estimates only... so no se (how to get??), use emmeans??
 # For se bars need emmeans() or bootstrap 
 
+
+
 period_colors <- c(Pre = "#4e9af1", Post = "#f17a4e")
 
 # Combine
@@ -283,7 +323,7 @@ q1_pred_all <- bind_rows(
   )
 
 # Plot
-ggplot(q1_pred_all %>% filter(taxa != "Acropora"), 
+ggplot(q1_pred_all, 
        aes(x = habitat, y = predicted, fill = pre_post_f)) +
   geom_col(position = position_dodge(width = 0.75),
            width = 0.65, colour = "white", linewidth = 0.3) +
@@ -306,14 +346,15 @@ ggplot(q1_pred_all %>% filter(taxa != "Acropora"),
 
 Bleaching hit recruitment hard across all three taxa and both habitats. Acr and Poc follow the same habitat preference (OR \> BR pre-bleaching, both crash post-bleaching). Por is the differing one; it's a back reef recruiter that was devastated. Wide CI on Porites BR Pre reflects genuine high variability in that cell.
 
-## Model 2: Do site × habitat differences in recruitment vary between pre and post-bleaching periods?
+## Model 2: Island-wide recruitment by site x habitat before and after bleaching 
+Do site × habitat differences in recruitment vary between pre and post-bleaching periods?
 
 Formula: site \* habitat \* pre_post_f + (1\|transect_id) + (1\|year)
 
 ### Acropora
 
 ```{r}
-cat("Q2A Acr ~ site * habitat * pre_post_f | transect_id + year\n")
+cat("Q2 Acr ~ site * habitat * pre_post_f | transect_id + year\n")
 
 q2a_acr <- glmmTMB(
   recruits_std ~ site * habitat * pre_post_f + (1 | transect_id) + (1 | year),
@@ -323,6 +364,11 @@ q2a_acr <- glmmTMB(
 )
 
 summary(q2a_acr)
+hist(dat_acr$recruits_std, breaks = 20)
+hist(dat_por$recruits_std, breaks = 20)
+hist(dat_poc$recruits_std, breaks = 20)
+
+
 ```
 
 ### Pocilopora
