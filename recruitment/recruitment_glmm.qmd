@@ -147,14 +147,19 @@ poc_pred_grid_year$predicted
 # Need to extract the CI (se)
 ```
 
+
 ```{r}
 # Visualization
-# New prediction plot 
-# Plot predictions for Poc
-ggplot(poc_pred_grid_year, aes(x = factor(year), y = predicted, col = factor(habitat))) + 
-  geom_point() + geom_line(group = 1) + facet_wrap(~habitat) + theme_bw() + 
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-  labs(title = "Island-wide Coral Recruitment by Habitat and Bleaching Period Per Taxa")
+poc_avg_recruits_year <- as.data.frame(dat_poc %>% group_by(habitat, year) %>% summarize(avg_recruit = mean(recruits_std)) %>% ungroup())
+
+poc_pred_grid_year$avg_recruit = poc_avg_recruits_year$avg_recruit
+
+ggplot(poc_pred_grid_year) + 
+    geom_col(aes(x = factor(year), y = avg_recruit, fill = habitat, alpha = .5)) +
+  geom_point(aes(x = factor(year), y = predicted, col = habitat)) +  geom_line(aes(x = factor(year), y = predicted, col = habitat), group = 1) +  
+   theme_bw() + facet_wrap(~habitat) + 
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Habitat-wide Coral Recruitment of Pocillopera (2013-2024)") + theme(legend.position = "none")
 ```
 
 #### Model Validation
@@ -231,7 +236,7 @@ ggplot(por_pred_grid_year) +
   geom_point(aes(x = factor(year), y = predicted, col = habitat)) +  geom_line(aes(x = factor(year), y = predicted, col = habitat), group = 1) +  
    theme_bw() + facet_wrap(~habitat) + 
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  labs(title = "Island-wide Coral Recruitment of Porites by Habitat and Bleaching Period ") + theme(legend.position = "none")
+  labs(title = "Habitat-wide Coral Recruitment of Porites (2013-2024)") + theme(legend.position = "none")
 ```
 
 
@@ -277,7 +282,6 @@ q2a_poc <- glmmTMB(
 summary(q2a_poc)
 
 # predictions to get standard errors, conversion to response space!!! 
-
 
 
 ```
