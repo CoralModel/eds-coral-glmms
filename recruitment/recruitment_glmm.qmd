@@ -145,6 +145,35 @@ recruit_transect %>%
 
 ```
 
+
+
+```{r}
+# Acr
+dat_acr %>% group_by(habitat, year) %>% 
+  summarize(total_recruits = sum(recruits_std)) %>%
+  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
+    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))  + 
+    labs(title = "Habitat-wide Coral Recruitment of Acropora (2013-2024)", caption = "2017 not sampled.") + theme(legend.position = "none")
+
+
+dat_por %>% group_by(habitat, year) %>% 
+  summarize(total_recruits = sum(recruits_std)) %>%
+  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
+    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+    labs(title = "Habitat-wide Coral Recruitment of Porites (2013-2024)", caption = "2017 not sampled.") + theme(legend.position = "none")
+
+
+dat_poc %>% group_by(habitat, year) %>% 
+  summarize(total_recruits = sum(recruits_std)) %>%
+  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
+    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))  +
+    labs(title = "Habitat-wide Coral Recruitment of Pocillopera (2013-2024)", caption = "2017 not sampled.") 
+
+
+
+
+```
+
 ## Model 1: Habitat level recruitment through time
 Question: How does coral recruitment differ between lagoon (BR) and forereef (OR) habitats across years from 2013-2024? Did those habitat differences change over time?
 
@@ -160,7 +189,7 @@ How did recruitment differ in the lagoon and forereef between 2013 and 2024?  Re
 
 
 ### Acropora
-Function of separate habitats (do NOT )
+Function of separate habitats 
 ** One for lagoon, or for forereef,
 THEN look at total recruitment per year without habitat 
 
@@ -202,35 +231,6 @@ THEN look at total recruitment per year without habitat
 # summary(q1_acr_OR) 
 # 
 ```
-
-
-```{r}
-# Acr
-dat_acr %>% group_by(habitat, year) %>% 
-  summarize(total_recruits = sum(recruits_std)) %>%
-  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
-    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))  + 
-    labs(title = "Habitat-wide Coral Recruitment of Acropora (2013-2024)", caption = "2017 not sampled.") + theme(legend.position = "none")
-
-
-dat_por %>% group_by(habitat, year) %>% 
-  summarize(total_recruits = sum(recruits_std)) %>%
-  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
-    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-    labs(title = "Habitat-wide Coral Recruitment of Porites (2013-2024)", caption = "2017 not sampled.") + theme(legend.position = "none")
-
-
-dat_poc %>% group_by(habitat, year) %>% 
-  summarize(total_recruits = sum(recruits_std)) %>%
-  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
-    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))  +
-    labs(title = "Habitat-wide Coral Recruitment of Pocillopera (2013-2024)", caption = "2017 not sampled.") 
-
-
-
-
-```
-
 
 ### Pocillopera
 
@@ -420,7 +420,10 @@ q2a_acr <- glmmTMB(
   data      = dat_acr,
   na.action = na.exclude
 )
+
 ```
+
+
 
 ### Pocillopora
 
@@ -436,7 +439,6 @@ summary(q2a_poc)
 # predictions to get standard errors, conversion to response space!!! 
 
 ```
-
 
 
 ```{r}
@@ -483,7 +485,7 @@ ggplot() +
   geom_point(data = poc_pred_grid_q2,
              aes(x = habitat, y = predicted, group = bleaching_status),
              position = position_dodge(width = .5),
-             size = 3, shape = 18) +  # shape 18 = filled diamond
+             size = 3, shape = 18) +  
   # Predicted ci
   # geom_errorbar(
   #   data = poc_pred_grid_q2,
