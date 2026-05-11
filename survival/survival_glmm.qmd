@@ -3,13 +3,9 @@ title: "survivorship_glmm"
 format: html
 ---
 
+# Setup
 ```{r}
 library(tidyverse)
-library(rgl)
-library(naniar)
-library(purrr)
-library(gganimate)
-library(nlme)
 library(here)
 library(MASS)
 library(glmmTMB)
@@ -17,142 +13,122 @@ library(performance)
 library(DHARMa)
 ```
 
-```{r}
-coral <- read_csv(here::here("..", "eds-coral-data-storage-management", "analysisdata", "volume_corals.csv"), guess_max = 10000)
-```
+# Data Preparation
 
 ```{r}
-coral_colors <- c(
-    Acr = "blue", 
-    Poc = "blue", 
-    Por = "darkgreen", 
-    Mil = "darkorange"
-  )
+coral <- read_csv(here::here("..", "eds-coral-data-storage-management", "analysisdata", "coral_demography_analysis_data.csv"), guess_max = 10000) # Corrects column types
 
 coral_death <- coral %>% 
   group_by(coral_id) %>%
-  arrange(year) %>% 
-  filter(str_detect(transect, "T")) %>% 
-  mutate(transect = case_when(
-           str_detect(transect, "1") ~ "T1",
-           str_detect(transect, "2") ~ "T2",
-           str_detect(transect, "3") ~ "T3",
-           str_detect(transect, "4") ~ "T4",
-         ),
-         taxa = case_when(
-           str_detect(taxa, "A") ~ "Acr",
-           TRUE ~ taxa
-         )) %>% 
+  arrange(coral_id, year) %>% 
+  # Assign previous year's size, when a dead coral does not have a current measurement
   mutate(current_volume = case_when(
     is.na(size_t0) ~ size_t_minus1,
     TRUE~ size_t0
-  ),
+  ), # Create a survival variable
   survival = case_when(
-    dyn_death == 1 ~ 0,
-    is.na(length) ~ NA,
-    TRUE ~ 1
+    dyn_death == 1 ~ 0, # If a coral dies assigned a 0
+    is.na(l) ~ NA, # All non existant corals are excluded
+    TRUE ~ 1 # All living corals assigned 1
   ), 
-  bleach = case_when(
+  # Create bleaching event variable
+  period = as_factor(case_when( 
     year < 2019 ~ 0,
     TRUE ~ 1
-  )) %>% 
-  ungroup() %>% 
-  filter(!is.na(survival)) %>% 
-  mutate(height = case_when(
-    height > 200 ~ height / 10, # Adjust 
-    TRUE ~ height
-  ))
+  )),
+  # Transform size
+  log_size = log10(current_volume)) %>% 
+  ungroup() %>%
+  filter(!is.na(survival))
 ```
 
 
 # Habitat
 How did the bleaching event affect coral taxa across habitats?
-
-## Pocillopora
-```{r}
-coral_poc_hab <- coral_death %>% 
-  filter(taxa == "Poc") %>% 
-  mutate(vol_s = scale(current_volume),
-         log_size = log(current_volume),
-         bleach = factor(bleach)
-         )
-
-poc_hab_surv_mod <- glmmTMB(survival ~ vol_s * habitat * bleach + (1 | site/transect_id/coral_id) + (1| year), family=binomial, data = coral_poc_hab, na.action = na.exclude)
-
-
-coral_poc_hab$fit.Surv <- predict(poc_hab_surv_mod, type = "response", re.form = NA)
-
-```
-
-```{r}
-ggplot(coral_poc_hab, aes(current_volume, survival, color = bleach)) +
-  geom_point(alpha = 0.5) +
-  geom_line(aes(y = fit.Surv, color = bleach)) +
-  scale_color_manual(values = c("blue", "gray1"), labels = c("Before", "After")) +
-  facet_grid(~habitat, scales = "free") +
-  theme_light() +
-  labs(x = "Volume (cm^3)",
-       y = "Survival probability",
-       color = "Bleaching\nEvent",
-       title = "Pocillopora survival across habitats")
-```
-
 ## Acropora
 
 ```{r}
 coral_acr_hab <- coral_death %>% 
-  filter(taxa == "Acr") %>% 
-  mutate(vol_s = scale(current_volume),
-         log_size = log(current_volume),
-         bleach = factor(bleach)
-         )
+  filter(taxa == "Acr")
 
-acr_hab_surv_mod <- glmmTMB(survival ~ vol_s * habitat * bleach + (1 | site/transect_id/coral_id) + (1| year), family=binomial, data = coral_acr_hab, na.action = na.exclude)
+acr_hab_surv_mod <- glmmTMB(survival ~ log_size * habitat * period + (1 | site/transect_id/coral_id) + (1| year), family=binomial, data = coral_acr_hab, na.action = na.exclude)
 
 coral_acr_hab$fit.Surv <- predict(acr_hab_surv_mod, type = "response", re.form = NA)
 
 ```
 
 ```{r}
-ggplot(coral_acr_hab, aes(current_volume, survival, color = bleach)) +
-  geom_point(alpha = 0.5) +
-  geom_line(aes(y = fit.Surv, color = bleach)) +
-  scale_color_manual(values = c("blue", "black"), labels = c("Before", "After")) +
-  facet_grid(~habitat, scales = "free") +
-  theme_light() +
-  labs(x = "Volume (cm^3)",
+ggplot(coral_acr_hab, aes(log_size, survival)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_line(aes(y = fit.Surv, color = period)) +
+  scale_color_manual(values = c("dodgerblue", "red"), labels = c("Before", "After")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  facet_grid(~habitat, scales = "free", labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  theme_bw() +
+  labs(x = "Volume (cm³)",
        y = "Survival probability",
-       color = "Bleaching\nevent",
+       color = "Bleaching\nEvent",
        title = "Acropora survival across habitats")
+
+ggsave(here::here("survival", "figs", "coral_acr_hab_fig.png"), height = 5, width = 8)
 ```
+
+
+
+## Pocillopora
+```{r}
+coral_poc_hab <- coral_death %>% 
+  filter(taxa == "Poc")
+
+poc_hab_surv_mod <- glmmTMB(survival ~ log_size * habitat * period + (1 | site/transect_id/coral_id) + (1| year), family=binomial, data = coral_poc_hab, na.action = na.exclude)
+
+coral_poc_hab$fit.Surv <- predict(poc_hab_surv_mod, type = "response", re.form = NA)
+```
+
+```{r}
+ggplot(coral_poc_hab, aes(log_size, survival)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_line(aes(y = fit.Surv, color = period)) +
+  scale_color_manual(values = c("dodgerblue", "red"), labels = c("Before", "After")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  facet_grid(~habitat, scales = "free", labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  theme_bw() +
+  labs(x = "Volume (cm³)",
+       y = "Survival probability",
+       color = "Bleaching\nEvent",
+       title = "Pocillopora survival across habitats")
+
+ggsave(here::here("survival", "figs", "coral_poc_hab_fig.png"), height = 5, width = 8)
+```
+
+
 
 ## Porites
 
 ```{r}
 coral_por_hab <- coral_death %>% 
-  filter(taxa == "Por") %>% 
-  mutate(vol_s = scale(current_volume),
-         log_size = log(current_volume),
-         bleach = factor(bleach)
-         )
+  filter(taxa == "Por")
 
-por_hab_surv_mod <- glmmTMB(survival ~ vol_s * habitat * bleach + (1 | site/transect_id/coral_id) + (1| year), family=binomial, data = coral_por_hab, na.action = na.exclude)
+por_hab_surv_mod <- glmmTMB(survival ~ log_size * habitat * period + (1 | site/transect_id/coral_id) + (1| year), family=binomial, data = coral_por_hab, na.action = na.exclude)
 
 coral_por_hab$fit.Surv <- predict(por_hab_surv_mod, type = "response", re.form = NA)
 
 ```
 
 ```{r}
-ggplot(coral_por_hab, aes(current_volume, survival, color = bleach)) +
-  geom_point(alpha = 0.5) +
-  geom_line(aes(y = fit.Surv, color = bleach)) +
-  scale_color_manual(values = c("blue", "black"), labels = c("Before", "After")) +
-  facet_grid(~habitat, scales = "free") +
-  theme_light() +
-  labs(x = "Volume (cm^3)",
+ggplot(coral_por_hab, aes(log_size, survival)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_line(aes(y = fit.Surv, color = period)) +
+  scale_color_manual(values = c("dodgerblue", "red"), labels = c("Before", "After")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  facet_grid(~habitat, scales = "free", labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  theme_bw() +
+  labs(x = "Volume (cm³)",
        y = "Survival probability",
        color = "Bleaching\nEvent",
        title = "Porites survival across habitats")
+
+ggsave(here::here("survival", "figs", "coral_por_hab_fig.png"), height = 5, width = 8)
 ```
 
 
@@ -178,103 +154,89 @@ performance(por_hab_surv_mod)
 # Site and habitat
 How did the bleaching event affect coral taxa survival across sites and habitats?
 
-## Pocillopera
-```{r}
-coral_poc <- coral_death %>% 
-  filter(taxa == "Poc") %>% 
-  mutate(vol_s = scale(current_volume),
-         log_size = log(current_volume),
-         bleach = factor(bleach)
-         )
-
-poc_surv_mod <- glmmTMB(survival ~ vol_s * site * habitat * bleach + (1 | transect_id/coral_id) + (1| year), family=binomial, data = coral_poc, na.action = na.exclude)
-
-coral_poc$fit.Surv <- predict(poc_surv_mod, type = "response", re.form = NA)
-
-```
-
-```{r}
-ggplot(coral_poc, aes(current_volume, survival, color = bleach)) +
-  geom_point(alpha = 0.5) +
-  geom_line(aes(y = fit.Surv, color = bleach)) +
-  scale_color_manual(values = c("blue", "black"), labels = c("Before", "After")) +
-  facet_grid(habitat~site, scales = "free") +
-  theme_light() +
-  labs(x = "Volume (cm^3)",
-       y = "Survival probability",
-       color = "Bleaching\nEvent",
-       title = "Pocillopora survival across sites and habitats")
-```
-
-
 ## Acropera
 ```{r}
 coral_acr <- coral_death %>% 
-  filter(taxa == "Acr") %>% 
-  mutate(vol_s = scale(current_volume),
-         log_size = log(current_volume),
-         bleach = factor(bleach)
-         )
+  filter(taxa == "Acr")
 
-acr_surv_mod <- glmmTMB(survival ~ vol_s * site * habitat * bleach + (1 | transect_id/coral_id) + (1| year), family=binomial, data = coral_acr, na.action = na.exclude)
+acr_surv_mod <- glmmTMB(survival ~ log_size * site * habitat * period + (1 | transect_id/coral_id) + (1| year), family=binomial, data = coral_acr, na.action = na.exclude)
 
 coral_acr$fit.Surv <- predict(acr_surv_mod, type = "response", re.form = NA)
+
+summary(acr_surv_mod)
+```
+
+```{r}
+ggplot(coral_acr, aes(log_size, survival)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_line(aes(y = fit.Surv, color = period)) +
+  scale_color_manual(values = c("dodgerblue", "red"), labels = c("Before", "After")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  facet_grid(habitat~site, scales = "free", labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  theme_bw() +
+  labs(x = "Volume (cm³)",
+       y = "Survival probability",
+       color = "Bleaching\nEvent",
+       title = "Acropora survival across sites and habitats")
+
+ggsave(here::here("survival", "figs", "coral_acr_fig.png"), height = 5, width = 8)
+```
+
+## Pocillopera
+```{r}
+coral_poc <- coral_death %>% 
+  filter(taxa == "Poc")
+
+poc_surv_mod <- glmmTMB(survival ~ log_size * site * habitat * period + (1 | transect_id/coral_id) + (1| year), family=binomial, data = coral_poc, na.action = na.exclude)
+
+coral_poc$fit.Surv <- predict(poc_surv_mod, type = "response", re.form = NA)
+
+summary(poc_surv_mod)
 
 ```
 
 ```{r}
-ggplot(coral_acr, aes(current_volume, survival, color = bleach)) +
-  geom_point(alpha = 0.5) +
-  geom_line(aes(y = fit.Surv, color = bleach)) +
-  scale_color_manual(values = c("blue", "black"), labels = c("Before", "After")) +
-  facet_grid(habitat~site, scales = "free") +
-  theme_light() +
-  labs(x = "Volume (cm^3)",
+ggplot(coral_poc, aes(log_size, survival)) +
+  geom_point(alpha = 0.5, color = "black") +
+  geom_line(aes(y = fit.Surv, color = period)) +
+  scale_color_manual(values = c("dodgerblue", "red"), labels = c("Before", "After")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  facet_grid(habitat~site, scales = "free", labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  theme_bw() +
+  labs(x = "Volume (cm³)",
        y = "Survival probability",
        color = "Bleaching\nEvent",
-       title = "Acropora survival across sites and habitats")
+       title = "Pocillopora survival across sites and habitats")
+
+ggsave(here::here("survival", "figs", "coral_poc_fig.png"), height = 5, width = 8)
 ```
 
 ## Porites
 ```{r}
 coral_por <- coral_death %>% 
-  filter(taxa == "Por") %>% 
-  mutate(vol_s = scale(current_volume),
-         log_size = log(current_volume),
-         bleach = factor(bleach)
-         ) %>% 
-  filter(!is.na(vol_s))
+  filter(taxa == "Por")
 
-por_surv_mod <- glmmTMB(survival ~ vol_s * site * habitat * bleach + (1 | transect_id/coral_id) + (1| year), family=binomial, data = coral_por, na.action = na.exclude)
+por_surv_mod <- glmmTMB(survival ~ log_size * site * habitat * period + (1 | transect_id/coral_id) + (1| year), family=binomial, data = coral_por, na.action = na.exclude)
 
 coral_por$fit.Surv <- predict(por_surv_mod, type = "response", re.form = NA, na.action = na.exclude)
 
-
+summary(por_surv_mod)
 ```
 
 ```{r}
-ggplot(coral_por, aes(current_volume, survival, color = bleach)) +
-  geom_point(alpha = 0.5) +
-  geom_line(aes(y = fit.Surv, color = bleach)) +
-  scale_color_manual(values = c("blue", "gray2"), labels = c("Before", "After")) +
-  facet_grid(habitat~site, scales = "free") +
-  theme_light() +
-  labs(x = "Volume (cm^3)",
+ggplot(coral_por, aes(log_size, survival)) +
+  geom_point(alpha = 0.3, color = "black") +
+  geom_line(aes(y = fit.Surv, color = period)) +
+  scale_color_manual(values = c("dodgerblue", "red"), labels = c("Before", "After")) +
+  scale_x_continuous(labels = scales::label_math(10^.x)) +
+  facet_grid(habitat~site, scales = "free", labeller = labeller(habitat = c("BR" = "Back Reef", "OR" = "Fore Reef"))) +
+  theme_bw() +
+  labs(x = "Volume (cm³)",
        y = "Survival probability",
        color = "Bleaching\nEvent",
        title = "Porites survival across sites and habitats")
-```
 
-### Model Summaries
-```{r}
-# Pocillopora site and habitat
-summary(poc_surv_mod)
-
-# Acropora site and habitat
-summary(acr_surv_mod)
-
-# Porites site and habitat
-summary(por_surv_mod)
+ggsave(here::here("survival", "figs", "coral_por_fig.png"), height = 5, width = 8)
 ```
 
 ## Model Checks
@@ -294,13 +256,15 @@ por_surv_mod_output <- simulateResiduals(fittedModel = por_surv_mod)
 # Check lengths
 length(por_surv_mod_output$scaledResiduals)
 nrow(coral_por)
-sum(complete.cases(coral_por[, c("survival", "vol_s", "site", 
-                                  "habitat", "bleach", 
+sum(complete.cases(coral_por[, c("survival", "log_size", "site", 
+                                  "habitat", "period", 
                                   "transect_id", "coral_id", "year")]))
 ```
+
+
 ```{r}
 # Explicitly clean coral_por before fitting
-vars_used <- c("survival", "vol_s", "site", "habitat", "bleach", 
+vars_used <- c("survival", "log_size", "site", "habitat", "period", 
                "transect_id", "coral_id", "year")
 
 coral_por_clean <- coral_por[complete.cases(coral_por[, vars_used]), ]
@@ -308,7 +272,7 @@ coral_por_clean <- coral_por[complete.cases(coral_por[, vars_used]), ]
 nrow(coral_por_clean)  # should be 10735
 
 # Refit model
-por_surv_mod <- glmmTMB(survival ~ vol_s * site * habitat * bleach + 
+por_surv_mod <- glmmTMB(survival ~ log_size * site * habitat * period + 
                           (1 | transect_id/coral_id) + (1 | year), 
                         family = binomial, 
                         data = coral_por_clean)  # no na.action
