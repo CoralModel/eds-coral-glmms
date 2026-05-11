@@ -39,6 +39,7 @@ clean_coral <- read_csv(
 glimpse(clean_coral)
 
 ```
+
 ```{r}
 # Rename habitats 
 clean_coral$habitat <- fct_recode(clean_coral$habitat, 
@@ -49,25 +50,6 @@ clean_coral$habitat <- fct_recode(clean_coral$habitat,
 Standardize recruitment for every meters squared on the POC on the forereef... CHECK!! 
 
 ```{r}
-# recruit_transect <- clean_coral %>%
-#   group_by(taxa, site, habitat, transect_id, year) %>%
-#   summarize(n_recruits = sum(dyn_recruitment, na.rm = TRUE), .groups = "drop") %>%
-#   mutate(
-#     n_recruits = ifelse(year == 2017, NA, n_recruits),
-#     recruits_std = n_recruits / 5,
-#     recruits_int = as.integer(round(recruits_std)),
-#     pre_post_f = factor(
-#       case_when(
-#         year >= 2013 & year <= 2018 ~ "Pre",
-#         year >= 2019 & year <= 2024 ~ "Post"
-#       ),
-#       levels = c("Pre", "Post")
-#     ),
-#     taxa    = factor(taxa),
-#     site    = relevel(factor(site),    ref = "LTER1"),
-#     habitat = relevel(factor(habitat), ref = "BR")
-#   )
-
 recruit_transect <- clean_coral %>%
   filter(x <= 5) %>%  # Keep transect corals only
   group_by(taxa, site, habitat, transect, year) %>%
@@ -87,14 +69,15 @@ recruit_transect <- clean_coral %>%
     site    = relevel(factor(site),    ref = "LTER1"),
     habitat = relevel(factor(habitat), ref = "Back Reef"),
     transect_id = paste(site, habitat, transect, sep = "_"),
-    transect_id = case_when(
-      transect_id == "LTER1_OR_TO1"         ~ "LTER1_OR_T01",
-      transect_id == "LTER1_OR_T02_2021"    ~ "LTER1_OR_T02",
-      transect_id == "LTER2_OR_T04_OLD"     ~ "LTER2_OR_T04",
-      transect_id == "LTER5_OR_T02_OLD"     ~ "LTER5_OR_T02",
-      transect_id == "LTER5_OR_T03_PRE2020" ~ "LTER5_OR_T03",
-      TRUE ~ transect_id
-    )
+   transect_id = paste(site, habitat, transect, sep = "_"),
+  transect_id = case_when(
+    transect_id == "LTER1_Fore Reef_TO1"  ~ "LTER1_Fore Reef_T01",
+    transect_id == "LTER1_Fore Reef_T02_2021"  ~ "LTER1_Fore Reef_T02",
+    transect_id == "LTER2_Fore Reef_T04_OLD"  ~ "LTER2_Fore Reef_T04",
+    transect_id == "LTER5_Fore Reef_T02_OLD" ~ "LTER5_Fore Reef_T02",
+    transect_id == "LTER5_Fore Reef_T03_PRE2020" ~ "LTER5_Fore Reef_T03",
+    TRUE ~ transect_id
+)
   )
 
 # Verify
@@ -115,18 +98,18 @@ dat_por <- recruit_transect %>% filter(taxa == "Por")
 
 ```{r}
 # Exploratory bar charts 
-recruit_transect %>%
-  filter(taxa != "Mil") %>%
-  ggplot(aes(x = factor(year), y = recruits_std, fill = bleaching_status)) +
-  geom_col() +
-  facet_grid(habitat ~ taxa, scales = "free_y") +  # Not constraint by y-axis
-  scale_fill_manual(values = c(Pre = "dodgerblue", Post = "red"),
-                    name = "Period") +
-  scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
-  theme_bw() +
-  labs(title = "Recruitment by Habitat and Taxa",
-       x = "Year", y = "Recruits per m²") + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+# recruit_transect %>%
+#   filter(taxa != "Mil") %>%
+#   ggplot(aes(x = factor(year), y = , fill = bleaching_status)) +
+#   geom_col() +
+#   facet_grid(habitat ~ taxa, scales = "free_y") +  # Not constraint by y-axis
+#   scale_fill_manual(values = c(Pre = "dodgerblue", Post = "red"),
+#                     name = "Period") +
+#   scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
+#   theme_bw() +
+#   labs(title = "Recruitment by Habitat and Taxa",
+#        x = "Year", y = "Recruits per m²") + 
+#   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 # recruit_transect %>%
 #   filter(taxa != "Mil") %>%
@@ -138,7 +121,28 @@ recruit_transect %>%
 #                     name = "Period") +
 #   theme_bw() +
 #   labs(title = "Recruitment by site-habitat combination and taxa",
-#        x = "Year", y = "Recruits per m²") + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) 
+#        x = "Year", y = "Recruits per m²") + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+recruit_transect %>%
+    #filter(taxa != "Mil") %>%
+    filter(!is.na(recruits_std)) %>%
+    ggplot(aes(x = taxa, y = recruits_std, fill = taxa)) +
+    geom_boxplot(outlier.shape = 21, outlier.size = 1.5) +
+    scale_y_log10() +  # Log scale since Por BR 2013 will dominate
+    scale_fill_manual(values = c(Acr = "#E63946", Poc = "#F4A6C0", Por = "#D4A017", Mil = "#FF7F2A")) +
+    theme_bw() +
+    theme(legend.position = "none") +
+    labs(
+        title   = "Distribution of Coral Recruitment by Taxa",
+        x       = "Taxa",
+        y       = "Recruits per m² (log scale)",
+        caption = "*Each observation = one transect-year (2017 excluded)"
+    )
+
+#****Each observation = one transect-year. 2017 excluded
+
+
 ```
 
 ## Model 1: Habitat level recruitment through time
@@ -242,7 +246,6 @@ q1_poc_year <- glmmTMB(
 summary(q1_poc_year) 
 ```
 
-Interpretation: Pre-bleaching OR recruited more than BR. Post-bleaching had flipped pattern: OR dropped sharply while BR held (interaction is p \< .05). OR recruitment seemed to drop significantly post bleaching.
 
 
 ```{r}
@@ -298,6 +301,11 @@ ggplot(poc_plot_data) +
     caption = "Bars = observed mean, points = model predicted. 2017 not sampled."
   )
 ```
+
+Pocillopora recruitment differed significantly between the back reef and fore reef across the study period, with the fore reef recruiting significantly more overall (p < 0.001). Back reef recruitment remained relatively stable between 2013 and 2019, with only 2018 exhibiting a notable increase (p = 0.035). A significant decline in recruitment followed by 2021 (p = 0.004).
+
+The fore reef showed a striking decline in recruitment over the time period. The fore reef was the dominant recruitment habitat in 2013 but declined sharply relatively to the back reef from 2014 onwards (p = 0.028). This divergence in recruitment away from the back reef became increasingly significant through the post-bleaching year; every year from 2018-2024 showed a highly significant reduction in fore reef recruitment relative to 2013 (all p < 0.001) except 2016 (p = 0.016). Recruitment was worse in the fore reef in 2022 (p < 0.001) and did not show signs of significant recovery through 2024 (p < 0.001).  
+
 
 #### Model Validation
 ```{r}
@@ -430,6 +438,7 @@ summary(q2a_poc)
 ```
 
 
+
 ```{r}
 # Prediction grid
 poc_pred_grid_q2 <- dat_poc %>%
@@ -442,24 +451,24 @@ poc_pred_grid_q2$predicted <- poc_fit_q2$fit
 poc_pred_grid_q2$se <- poc_fit_q2$se.fit
 
 # Observed means 
-
 poc_obs_q2 <- dat_poc %>%
   group_by(site, habitat, bleaching_status) %>%
   summarize(observed = mean(recruits_std, na.rm = TRUE), .groups = "drop")
-
+view(poc_obs_q2)
+view(poc_pred_grid_q2)
 
 # Combine 
+# poc_q2_plot_df <- poc_pred_grid_q2 %>%
+#   left_join(poc_obs_q2, by = c("site", "habitat", "bleaching_status")) %>%
+#   pivot_longer(cols      = c(predicted, observed),
+#                names_to  = "type",
+#                values_to = "recruits") %>%
+#   mutate(
+#     bleaching_status = factor(bleaching_status, levels = c("Pre", "Post")),
+#     type       = factor(type, levels = c("observed", "predicted")),
+#     site       = factor(site, levels = c("LTER1", "LTER2", "LTER4", "LTER5"))
+#   )
 
-poc_q2_plot_df <- poc_pred_grid_q2 %>%
-  left_join(poc_obs_q2, by = c("site", "habitat", "bleaching_status")) %>%
-  pivot_longer(cols      = c(predicted, observed),
-               names_to  = "type",
-               values_to = "recruits") %>%
-  mutate(
-    bleaching_status = factor(bleaching_status, levels = c("Pre", "Post")),
-    type       = factor(type, levels = c("observed", "predicted")),
-    site       = factor(site, levels = c("LTER1", "LTER2", "LTER4", "LTER5"))
-  )
 
 ```
 
@@ -469,12 +478,11 @@ ggplot() +
   # Observed bars
   geom_col(data = poc_obs_q2,
            aes(x = habitat, y = observed, fill = bleaching_status),
-           position = position_dodge(width = 0.75),
-           width = 0.65, colour = "white", linewidth = 0.3) +
+           position = position_dodge(width = .5), width = .5, col = "white", linewidth = 0.3, alpha = .7) +
   # Predicted points
   geom_point(data = poc_pred_grid_q2,
              aes(x = habitat, y = predicted, group = bleaching_status),
-             position = position_dodge(width = 0.75),
+             position = position_dodge(width = .5),
              size = 3, shape = 18) +  # shape 18 = filled diamond
   # Predicted ci
   # geom_errorbar(
@@ -486,29 +494,29 @@ ggplot() +
   #   position = position_dodge(width = 0.75),
   #   width = 0.25, linewidth = 0.6
   # ) +
-  facet_wrap(~ site, ncol = 2) +
+  facet_wrap(~ site) +
   scale_fill_manual(
-    values = c(Pre = "#4e9af1", Post = "#f17a4e"),
+    values = c(Pre = "dodgerblue", Post = "red"),
     name   = "Period",
     labels = c(Pre = "Pre-bleaching (2013-2018)",
                Post = "Post-bleaching (2019-2024)")
   ) +
   labs(
-    title    = "Pocillopora recruitment by site x habitat: predicted vs observed",
-    subtitle = "Bars = observed mean, point + CI = model predicted (±95% CI)",
+    title    = "Pocillopora Island-Wide Recruitment",
+    caption = "Bars = observed mean, point = model predicted",
     x        = "Habitat",
     y        = "Recruits per m²"
   ) +
-  theme_bw(base_size = 13) +
+  theme_bw() +
   theme(
-    strip.background   = element_rect(fill = "grey92", colour = NA),
-    strip.text         = element_text(face = "bold"),
-    legend.position    = "bottom",
-    panel.grid.major.x = element_blank(),
-    # plot.title         = element_text(face = "bold"),
-    # plot.subtitle      = element_text(colour = "grey40")
+    legend.position    = "bottom"
   )
 ```
+Prior to bleaching, Pocillopora recruitment was significantly higher on the fore reef than the back reef island-wide (p = .008). There were no significant differences among sites within either habitat, suggesting that there is a consistent habitat-level pattern across Mo'orea. Back reef recruitment remained low and stable across all four sites pre-bleaching while fore reef recruitment was higher at all sites relative to their respective back reefs.
+
+Recruitment patterns in Pocillopora shifted significantly in both habitats. Fore reef recruitment declined sharply at both sites, and the previous advantage for recruitment held in the fore reef disappeared at LTER1 (p < 0.001). Recruitment also declined significantly at the LTER 2 back reef (p = 0.049). However, the degree of this decline varied among sites. LTER 2 fore reef experienced a smaller decline than LTER1 (p = 0.031). LTER 5 fore reef showed no significant decline post-bleaching, maintaining pre-bleaching recruitment levels (p < 0.001). Overall, bleaching reduced fore reef recruitment across the island, but some sites (especially LTER 5) appeared to serve as a refuge that could potentially help Pocillopora recovery.
+
+
 
 ### Porites
 
@@ -521,3 +529,66 @@ q2a_por <- glmmTMB(
 )
 summary(q2a_por)
 ```
+
+```{r}
+# Prediction grid
+por_pred_grid_q2 <- dat_por %>%
+  distinct(site, habitat, bleaching_status)
+
+por_fit_q2 <- predict(q2a_por, newdata = por_pred_grid_q2,
+                      type = "response", re.form = NA, se.fit = TRUE)
+
+por_pred_grid_q2$predicted <- por_fit_q2$fit
+por_pred_grid_q2$se <- por_fit_q2$se.fit
+
+# Observed means 
+por_obs_q2 <- dat_por %>%
+  group_by(site, habitat, bleaching_status) %>%
+  summarize(observed = mean(recruits_std, na.rm = TRUE), .groups = "drop")
+view(por_obs_q2)
+view(por_pred_grid_q2)
+```
+
+```{r}
+# Predictions
+ggplot() +
+  # Observed bars
+  geom_col(data = por_obs_q2,
+           aes(x = habitat, y = observed, fill = bleaching_status),
+           position = position_dodge(width = .5), width = .5, col = "white", linewidth = 0.3, alpha = .7) +
+  # Predicted points
+  geom_point(data = por_pred_grid_q2,
+             aes(x = habitat, y = predicted, group = bleaching_status),
+             position = position_dodge(width = .5),
+             size = 3, shape = 18) +  
+  # Predicted ci
+  # geom_errorbar(
+  #   data = poc_pred_grid_q2,
+  #   aes(x    = habitat,
+  #       ymin = exp(log(predicted) - 1.96 * (se / predicted)),
+  #       ymax = exp(log(predicted) + 1.96 * (se / predicted)),
+  #       group = bleaching_status),
+  #   position = position_dodge(width = 0.75),
+  #   width = 0.25, linewidth = 0.6
+  # ) +
+  facet_wrap(~ site) +
+  scale_fill_manual(
+    values = c(Pre = "dodgerblue", Post = "red"),
+    name   = "Period",
+    labels = c(Pre = "Pre-bleaching (2013-2018)",
+               Post = "Post-bleaching (2019-2024)")
+  ) +
+  labs(
+    title    = "Porites Island-Wide Recruitment",
+    caption = "Bars = observed mean, point = model predicted",
+    x        = "Habitat",
+    y        = "Recruits per m²"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position    = "bottom"
+  )
+```
+Porites recruitment showed an opposing pattern to Pocillopora; there was notably much higher recruitment in the back reef compared to the fore reef pre-bleaching. This pattern was clear at LTER1 (p = 0.019), consistent with this taxa’s preference for lagoonal back reefs. The preference for back reef habitat was stronger at LTER4 and LTER5, where fore reef recruitment was much lower than at LTER1 fore reef (p < 0.001 and p = 0.003). Post-bleaching, back reef recruitment declined significantly at LTER1 (p < 0.001), LTER2 (p = 0.003), and LTER5 (p = 0.026). This significant decrease indicates a widespread decline in Porites’ main recruitment habitat. 
+
+Fore reef recruitment was already low before bleaching and declined further at most sites post-bleaching. However, LTER5 appeared to be relatively unchanged in recruitment at the fore reef. A significant interaction between habitat and bleaching indicated that fore reef recruitment declined more strongly than back reef recruitment at LTER1 (p = 0.012). Site-level differences showed importance: LTER2 fore reef was less affected by bleaching compared to LTER1 (p < 0.024), while recruitment remained similar before and after bleaching at LTER5 fore reef (p < 0.001). LTER4 showed a similar but non-significant trend (p = 0.067). At LTER5, back reef Porites recruitment declined significantly post-bleaching (p = 0.026), as contrasted with fore reef recruitment at this site. 
