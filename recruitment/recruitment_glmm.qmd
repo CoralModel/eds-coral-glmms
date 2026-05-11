@@ -38,6 +38,7 @@ clean_coral <- read_csv(
 # Take a look at the cleaned coral dataset
 glimpse(clean_coral)
 
+view(clean_coral)
 ```
 
 ```{r}
@@ -47,7 +48,7 @@ clean_coral$habitat <- fct_recode(clean_coral$habitat,
                 "Fore Reef" = "OR")
 ```
 
-Standardize recruitment for every meters squared on the POC on the forereef... CHECK!! 
+Standardize recruitment for every meters squared on the POC on the forereef... CHECK!!
 
 ```{r}
 recruit_transect <- clean_coral %>%
@@ -55,9 +56,15 @@ recruit_transect <- clean_coral %>%
   group_by(taxa, site, habitat, transect, year) %>%
   summarize(n_recruits = sum(dyn_recruitment, na.rm = TRUE), .groups = "drop") %>%
   mutate(n_recruits = ifelse(year == 2017, NA, n_recruits)) %>%  # NA before standardizing
-  mutate(
-    recruits_std = n_recruits / 5,
-    recruits_int = as.integer(round(recruits_std)),
+ 
+   mutate( # Standardize recruits to every m^2
+    # recruits_std = case_when(
+    #   taxa == "Poc" & habitat == "Fore Reef" ~ (n_recruits/1)*5,
+    #    TRUE ~ n_recruits/5
+    #),
+  recruits_std = n_recruits / 5,
+  #  recruits_int = as.integer(round(recruits_std)),
+    # Create bleaching status
     bleaching_status   = factor(
       case_when(
         year >= 2013 & year <= 2018 ~ "Pre",
@@ -82,12 +89,10 @@ recruit_transect <- clean_coral %>%
 
 # Verify
 unique(recruit_transect$transect_id)
-#unique(clean_coral$transect_id)
-view(recruit_transect)
+
 ```
 
-****Offshore for poc are recruits are counted in the first m^2 (check and make sure this is the case, so not find recruits past the first meter sites)
-
+\*\*\*\*Offshore for poc are recruits are counted in the first m\^2 (check and make sure this is the case, so not find recruits past the first meter sites)
 
 ```{r}
 # Create filtered datasets for each taxa
@@ -145,8 +150,6 @@ recruit_transect %>%
 
 ```
 
-
-
 ```{r}
 # Acr
 dat_acr %>% group_by(habitat, year) %>% 
@@ -175,33 +178,78 @@ dat_poc %>% group_by(habitat, year) %>%
 ```
 
 ## Model 1: Habitat level recruitment through time
+
 Question: How does coral recruitment differ between lagoon (BR) and forereef (OR) habitats across years from 2013-2024? Did those habitat differences change over time?
 
 -   **Formula: habitat \* year + (1\|site/transect_id)**
 -   **site/transect_id: sites pooled as random... island-wide habitat question**
 -   **year crossed random effect: absorbs annual variation**
 
+\*\*Get estimate on link scale and then get se since only on link scale and then convert to response space
 
-**Get estimate on link scale and then get se since only on link scale and then convert to response space 
-
-
-How did recruitment differ in the lagoon and forereef between 2013 and 2024?  Recruitment... most abundant genera of corals (Por, Poc, Acr)... How you did it? (Poc is for 1 m squared of forereef) 
-
+How did recruitment differ in the lagoon and forereef between 2013 and 2024? Recruitment... most abundant genera of corals (Por, Poc, Acr)... How you did it? (Poc is for 1 m squared of forereef)
 
 ### Acropora
-Function of separate habitats 
-** One for lagoon, or for forereef,
-THEN look at total recruitment per year without habitat 
+I am currently facing issues with model convergence regarding the habitat-wide changes in standardized recruitment (transect level). I will discuss the potential to switch over to a Gamma distribution with a .001 adjustment with a statistical professor later this week. I have previously tried: two separate models for each habitat (one for lagoon and one for fore reef) and another mother for looking at total recruitment per year without habitat. Both models failed to converge, pointing to the sparse 
 
 ```{r}
 #| collapse: true
-# q1_acr_year <- glmmTMB(
-#   recruits_std ~ habitat*factor(year) + (1 | transect_id),
-#   family    = tweedie(link = "log"),
-#   data      = dat_acr, 
-#   na.action = na.exclude
-# )
-# 
+# q1_acr_year <- glmmTMB(recruits_std ~ habitat*factor(year) + (1 | transect_id), 
+#  family    = tweedie(link = "log"), 
+#  data      = dat_acr,  
+#  na.action = na.exclude )
+#  summary(q1_acr_year)
+
+dat_acr$recruits_std_offset <- dat_acr$recruits_std +.0001
+q1_acr_year_adjust <- glmmTMB(recruits_std_offset~ habitat*factor(year) + (1|transect_id), family = Gamma(link = "log"), na.action = na.exclude, data = dat_acr)
+summary(q1_acr_year_adjust)
+
+hist(dat_acr$recruits_std_offset, breaks = 20)
+
+# Visualize predictions
+# Summarize standardized recruits for each habitat and year
+acr_avg_recruits_year <- dat_acr %>% group_by(habitat,year) %>% 
+  summarize(avg_recruits = mean(recruits_std_offset, na.rm = T)) %>% ungroup()
+
+acr_prediction_grid <- dat_acr %>% 
+  filter(year != 2017) %>% 
+  distinct(habitat, year)
+
+acr_prediction_grid$predicted<- predict(q1_acr_year_adjust, newdata = acr_prediction_grid, 
+                                           type = "response", re.form = NA)
+
+# Join predictions to observed
+acr_plot_data <- acr_avg_recruits_year %>% left_join(acr_prediction_grid, by = c("habitat", "year"))
+
+# Plot 
+ggplot(acr_plot_data) + 
+  geom_col(aes(x = factor(year), y = avg_recruits, fill = habitat), 
+           alpha = 0.5) +
+  geom_point(aes(x = factor(year), y = predicted, col = habitat)) + 
+  geom_line(aes(x = factor(year), y = predicted, col = habitat, 
+                group = habitat)) +  
+  facet_wrap(~ habitat) +
+  scale_fill_manual(
+    values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"),  
+    name   = "Observed"
+  ) +
+  scale_color_manual(
+    values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"), 
+    name   = "Predicted"
+  ) +
+  scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
+  theme_bw() + 
+  theme( # Specify mean observed and predicted recruits
+    axis.text.x   = element_text(angle = 45, vjust = 1, hjust = 1),
+    legend.position = "bottom"
+  ) +
+  labs(
+    title   = "Habitat-wide Coral Recruitment of Acropora (2013-2024)",
+    y       = "Recruits per m²",
+    x       = "Year",
+    caption = "Bars = observed mean, points = model predicted. 2017 not sampled."
+  )
+
 # # Island-wide Acropora 
 #  q1_acr_year_island_wide <- glmmTMB(
 #   recruits_std ~ factor(year) + (1 | transect_id),
@@ -244,9 +292,35 @@ q1_poc_year <- glmmTMB(
 )
 
 summary(q1_poc_year) 
+
+
+## Recruitment standardization WITH the Poc OR *5 scaling
+# (Intercept)                        -0.4012     0.3964  -1.012  0.31140    
+# habitatFore Reef                    3.4127     0.4228   8.071 6.96e-16 ***
+# factor(year)2014                   -0.2789     0.5793  -0.481  0.63025    
+# factor(year)2015                    0.1223     0.5497   0.222  0.82397    
+# factor(year)2016                   -0.6194     0.6082  -1.018  0.30850    
+# factor(year)2018                    0.6576     0.5169   1.272  0.20332    
+# factor(year)2019                   -0.2546     0.5775  -0.441  0.65929    
+# factor(year)2020                   -0.7664     0.6218  -1.233  0.21774    
+# factor(year)2021                   -1.3564     0.6842  -1.982  0.04742 *  
+# factor(year)2022                   -0.3736     0.5871  -0.636  0.52453    
+# factor(year)2023                   -0.1818     0.5718  -0.318  0.75047    
+# factor(year)2024                   -0.4625     0.5946  -0.778  0.43668    
+# habitatFore Reef:factor(year)2014  -0.9464     0.6287  -1.505  0.13222    
+# habitatFore Reef:factor(year)2015  -1.7978     0.6099  -2.948  0.00320 ** 
+# habitatFore Reef:factor(year)2016  -1.1234     0.6644  -1.691  0.09086 .  
+# habitatFore Reef:factor(year)2018  -2.8010     0.5918  -4.733 2.21e-06 ***
+# habitatFore Reef:factor(year)2019  -2.7595     0.6722  -4.105 4.04e-05 ***
+# habitatFore Reef:factor(year)2020  -2.4516     0.7181  -3.414  0.00064 ***
+# habitatFore Reef:factor(year)2021  -2.3966     0.7943  -3.017  0.00255 ** 
+# habitatFore Reef:factor(year)2022  -3.2923     0.7084  -4.648 3.36e-06 ***
+# habitatFore Reef:factor(year)2023  -2.0124     0.6417  -3.136  0.00171 ** 
+# habitatFore Reef:factor(year)2024  -2.0778     0.6717  -3.094  0.00198 ** 
+
+
+
 ```
-
-
 
 ```{r}
 #| message: false
@@ -256,7 +330,7 @@ summary(q1_poc_year)
 poc_avg_recruits_year <- dat_poc %>% 
   group_by(habitat, year) %>% 
   summarize(avg_recruit = mean(recruits_std, na.rm = TRUE)) %>% 
-  ungroup()
+  ungroup() 
 
 # Predictions (2017 excluded) 
 poc_pred_grid_year <- dat_poc %>%
@@ -302,12 +376,12 @@ ggplot(poc_plot_data) +
   )
 ```
 
-Pocillopora recruitment differed significantly between the back reef and fore reef across the study period, with the fore reef recruiting significantly more overall (p < 0.001). Back reef recruitment remained relatively stable between 2013 and 2019, with only 2018 exhibiting a notable increase (p = 0.035). A significant decline in recruitment followed by 2021 (p = 0.004).
+Pocillopora recruitment differed significantly between the back reef and fore reef across the study period, with the fore reef recruiting significantly more overall (p \< 0.001). Back reef recruitment remained relatively stable between 2013 and 2019, with only 2018 exhibiting a notable increase (p = 0.035). A significant decline in recruitment followed by 2021 (p = 0.004).
 
-The fore reef showed a striking decline in recruitment over the time period. The fore reef was the dominant recruitment habitat in 2013 but declined sharply relatively to the back reef from 2014 onwards (p = 0.028). This divergence in recruitment away from the back reef became increasingly significant through the post-bleaching year; every year from 2018-2024 showed a highly significant reduction in fore reef recruitment relative to 2013 (all p < 0.001) except 2016 (p = 0.016). Recruitment was worse in the fore reef in 2022 (p < 0.001) and did not show signs of significant recovery through 2024 (p < 0.001).  
-
+The fore reef showed a striking decline in recruitment over the time period. The fore reef was the dominant recruitment habitat in 2013 but declined sharply relatively to the back reef from 2014 onwards (p = 0.028). This divergence in recruitment away from the back reef became increasingly significant through the post-bleaching year; every year from 2018-2024 showed a highly significant reduction in fore reef recruitment relative to 2013 (all p \< 0.001) except 2016 (p = 0.016). Recruitment was worse in the fore reef in 2022 (p \< 0.001) and did not show signs of significant recovery through 2024 (p \< 0.001).
 
 #### Model Validation
+
 ```{r}
 # Model validation 
 ## Model validation and assumptions 
@@ -321,7 +395,6 @@ The fore reef showed a striking decline in recruitment over the time period. The
 # Q2A (data never really matches the model... how different is the model from the assumption)
 # switch to tweedie model for #Q2a.. try tweedie() 
 ```
-
 
 ### Porites
 
@@ -389,19 +462,12 @@ ggplot(por_plot_data) +
   )
 ```
 
+Porites recruitment was significantly higher in the back reef than the forereef across the entire study period (p \< 0.001), making it the only taxa to show back reef dominance. Back reef recruitment was exceptionally high in 2013 then declined sharply and significantly every subsequent year (all p \< 0.001), with the steepest drops occurring after 2019 and bottoming out in 2024, worst year on record (p \< 0.001). This monotonic decline suggests a long-term suppression of back reef Porites recruitment that predates the bleaching event and worsened dramatically after it.
 
-Opposite pattern seen: BR recruited much more than OR pre-bleaching (habitatOR = -1.91 and is significant). Both habitats dropped post bleaching (pre_post is significant); however, the gap is not significant since interaction is not significant.
+The forereef told a different story. While it recruited significantly less than the back reef overall, the gap between habitats narrowed significantly in 2018 and 2019 (p = 0.021 and p = 0.037) as the back reef collapsed faster than the forereef during the bleaching period. By 2024 the interaction term reversed significantly (p = 0.009), not because the forereef recovered, but because the back reef had declined so severely that the two habitats converged near zero. This convergence reflects a system-wide collapse of Porites recruitment rather than any habitat-specific recovery, consistent with the near-zero values visible across both habitats in the post-2019 period.Model Validation
 
+## Model 2: Island-wide recruitment by site x habitat before and after bleaching
 
-***offshore dominated by pocillopera because of disturnabce in 2010 (corals came back! Poc is opp)
-
-Bleaching hit recruitment hard across all three taxa and both habitats. Acr and Poc follow the same habitat preference (OR \> BR pre-bleaching, both crash post-bleaching). Por is the differing one; it's a back reef recruiter that was devastated. Wide CI on Porites BR Pre reflects genuine high variability in that cell.
-
-
-#### Model Validation
-
-
-## Model 2: Island-wide recruitment by site x habitat before and after bleaching 
 Do site × habitat differences in recruitment vary between pre and post-bleaching periods?
 
 Formula: site \* habitat \* bleaching_status + (1\|transect_id) + (1\|year)
@@ -411,18 +477,88 @@ Formula: site \* habitat \* bleaching_status + (1\|transect_id) + (1\|year)
 ```{r}
 # Try doing separately for each habitat
 q2a_acr <- glmmTMB(
-  recruits_std ~ site + habitat + bleaching_status +
-                 site:habitat +
-                 habitat:bleaching_status +
-                 site:bleaching_status +
+  recruits_std ~ site*habitat*bleaching_status + 
                  (1 | transect_id) + (1 | year),
   family    = tweedie(),
   data      = dat_acr,
   na.action = na.exclude
 )
+# q2a_acr <- glmmTMB(
+#   recruits_std ~ site + habitat + bleaching_status +
+#                  site:habitat +
+#                  habitat:bleaching_status +
+#                  site:bleaching_status +
+#                  (1 | transect_id) + (1 | year),
+#   family    = tweedie(),
+#   data      = dat_acr,
+#   na.action = na.exclude
+# )
+
+summary(q2a_acr)
 
 ```
 
+```{r}
+# Prediction grid
+acr_pred_grid_q2 <- dat_acr %>%
+  distinct(site, habitat, bleaching_status)
+
+acr_fit_q2 <- predict(q2a_acr, newdata = acr_pred_grid_q2,
+                      type = "response", re.form = NA, se.fit = TRUE)
+
+acr_pred_grid_q2$predicted <- acr_fit_q2$fit
+acr_pred_grid_q2$se <- acr_fit_q2$se.fit
+
+# Observed means 
+acr_obs_q2 <- dat_acr %>%
+  group_by(site, habitat, bleaching_status) %>%
+  summarize(observed = mean(recruits_std, na.rm = TRUE), .groups = "drop")
+
+view(acr_obs_q2)
+view(acr_pred_grid_q2)
+
+```
+
+```{r}
+# Predictions
+ggplot() +
+  # Observed bars
+  geom_col(data = acr_obs_q2,
+           aes(x = habitat, y = observed, fill = bleaching_status),
+           position = position_dodge(width = .5), width = .5, col = "white", linewidth = 0.3, alpha = .7) +
+  # Predicted points
+  geom_point(data = acr_pred_grid_q2,
+             aes(x = habitat, y = predicted, group = bleaching_status),
+             position = position_dodge(width = .5),
+             size = 3, shape = 18) +  
+  # Predicted ci
+  # geom_errorbar(
+  #   data = poc_pred_grid_q2,
+  #   aes(x    = habitat,
+  #       ymin = exp(log(predicted) - 1.96 * (se / predicted)),
+  #       ymax = exp(log(predicted) + 1.96 * (se / predicted)),
+  #       group = bleaching_status),
+  #   position = position_dodge(width = 0.75),
+  #   width = 0.25, linewidth = 0.6
+  # ) +
+  facet_wrap(~ site) +
+  scale_fill_manual(
+    values = c(Pre = "dodgerblue", Post = "red"),
+    name   = "Period",
+    labels = c(Pre = "Pre-bleaching (2013-2018)",
+               Post = "Post-bleaching (2019-2024)")
+  ) +
+  labs(
+    title    = "Acropora Island-Wide Recruitment",
+    caption = "Bars = observed mean, point = model predicted",
+    x        = "Habitat",
+    y        = "Recruits per m²"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position    = "bottom"
+  )
+```
 
 
 ### Pocillopora
@@ -439,7 +575,6 @@ summary(q2a_poc)
 # predictions to get standard errors, conversion to response space!!! 
 
 ```
-
 
 ```{r}
 # Prediction grid
@@ -514,11 +649,10 @@ ggplot() +
     legend.position    = "bottom"
   )
 ```
+
 Prior to bleaching, Pocillopora recruitment was significantly higher on the fore reef than the back reef island-wide (p = .008). There were no significant differences among sites within either habitat, suggesting that there is a consistent habitat-level pattern across Mo'orea. Back reef recruitment remained low and stable across all four sites pre-bleaching while fore reef recruitment was higher at all sites relative to their respective back reefs.
 
-Recruitment patterns in Pocillopora shifted significantly in both habitats. Fore reef recruitment declined sharply at both sites, and the previous advantage for recruitment held in the fore reef disappeared at LTER1 (p < 0.001). Recruitment also declined significantly at the LTER 2 back reef (p = 0.049). However, the degree of this decline varied among sites. LTER 2 fore reef experienced a smaller decline than LTER1 (p = 0.031). LTER 5 fore reef showed no significant decline post-bleaching, maintaining pre-bleaching recruitment levels (p < 0.001). Overall, bleaching reduced fore reef recruitment across the island, but some sites (especially LTER 5) appeared to serve as a refuge that could potentially help Pocillopora recovery.
-
-
+Recruitment patterns in Pocillopora shifted significantly in both habitats. Fore reef recruitment declined sharply at both sites, and the previous advantage for recruitment held in the fore reef disappeared at LTER1 (p \< 0.001). Recruitment also declined significantly at the LTER 2 back reef (p = 0.049). However, the degree of this decline varied among sites. LTER 2 fore reef experienced a smaller decline than LTER1 (p = 0.031). LTER 5 fore reef showed no significant decline post-bleaching, maintaining pre-bleaching recruitment levels (p \< 0.001). Overall, bleaching reduced fore reef recruitment across the island, but some sites (especially LTER 5) appeared to serve as a refuge that could potentially help Pocillopora recovery.
 
 ### Porites
 
@@ -591,6 +725,8 @@ ggplot() +
     legend.position    = "bottom"
   )
 ```
-Porites recruitment showed an opposing pattern to Pocillopora; there was notably much higher recruitment in the back reef compared to the fore reef pre-bleaching. This pattern was clear at LTER1 (p = 0.019), consistent with this taxa’s preference for lagoonal back reefs. The preference for back reef habitat was stronger at LTER4 and LTER5, where fore reef recruitment was much lower than at LTER1 fore reef (p < 0.001 and p = 0.003). Post-bleaching, back reef recruitment declined significantly at LTER1 (p < 0.001), LTER2 (p = 0.003), and LTER5 (p = 0.026). This significant decrease indicates a widespread decline in Porites’ main recruitment habitat. 
 
-Fore reef recruitment was already low before bleaching and declined further at most sites post-bleaching. However, LTER5 appeared to be relatively unchanged in recruitment at the fore reef. A significant interaction between habitat and bleaching indicated that fore reef recruitment declined more strongly than back reef recruitment at LTER1 (p = 0.012). Site-level differences showed importance: LTER2 fore reef was less affected by bleaching compared to LTER1 (p < 0.024), while recruitment remained similar before and after bleaching at LTER5 fore reef (p < 0.001). LTER4 showed a similar but non-significant trend (p = 0.067). At LTER5, back reef Porites recruitment declined significantly post-bleaching (p = 0.026), as contrasted with fore reef recruitment at this site. 
+
+Porites recruitment showed an opposing pattern to Pocillopora; there was notably much higher recruitment in the back reef compared to the fore reef pre-bleaching. This pattern was clear at LTER1 (p = 0.019), consistent with this taxa’s preference for lagoonal back reefs. The preference for back reef habitat was stronger at LTER4 and LTER5, where fore reef recruitment was much lower than at LTER1 fore reef (p \< 0.001 and p = 0.003). Post-bleaching, back reef recruitment declined significantly at LTER1 (p \< 0.001), LTER2 (p = 0.003), and LTER5 (p = 0.026). This significant decrease indicates a widespread decline in Porites’ main recruitment habitat.
+
+Fore reef recruitment was already low before bleaching and declined further at most sites post-bleaching. However, LTER5 appeared to be relatively unchanged in recruitment at the fore reef. A significant interaction between habitat and bleaching indicated that fore reef recruitment declined more strongly than back reef recruitment at LTER1 (p = 0.012). Site-level differences showed importance: LTER2 fore reef was less affected by bleaching compared to LTER1 (p \< 0.024), while recruitment remained similar before and after bleaching at LTER5 fore reef (p \< 0.001). LTER4 showed a similar but non-significant trend (p = 0.067). At LTER5, back reef Porites recruitment declined significantly post-bleaching (p = 0.026), as contrasted with fore reef recruitment at this site.
