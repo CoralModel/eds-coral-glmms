@@ -1,6 +1,10 @@
 # MCR LTER Coral Demography — GLMM Analysis
 
-<img width="1880" height="714" alt="acr" src="https://github.com/user-attachments/assets/44d13c08-0049-44a8-a915-5b3769fb4c35" />
+<figure>
+  <img src="https://github.com/user-attachments/assets/c5b29a48-7d48-4032-b5bd-86dd4097d05c"
+  <figcaption>Photo by Pierrick Harnay</figcaption>
+</figure>
+
 
 <br>
 
