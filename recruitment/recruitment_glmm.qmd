@@ -35,10 +35,11 @@ Then, the cleaned data (referenced from a separate repository) was loaded in.
 # "~/MEDS/capstone/eds-coral-data-storage-management/analysisdata/coral_demography_analysis_data.csv", guess_max = 1000)
 
 clean_coral <- read_csv( 
-"~/MEDS/capstone/eds-coral-glmms/recruitment/data_recruitment/vedika_coral_demography_analysis_data.csv", guess_max = 1000 )
+"~/MEDS/capstone/eds-coral-glmms/recruitment/data_recruitment/tableau_recruitment_coral_demography_analysis_data.csv", guess_max = 1000 )
 
 # Take a look at the cleaned coral dataset
 glimpse(clean_coral)
+unique(clean_coral$transect_id)
 
 view(clean_coral)
 ```
@@ -164,8 +165,9 @@ Standardize recruitment for every meters squared on the POC on the forereef
 ```{r}
 # Exclude the Poc recruits OUTSIDE 1 m^2
 recruit_transect <- clean_coral %>%
-  mutate(x = ifelse(x > 5, x / 10, x)) %>%
-  filter(!(habitat == "Fore Reef" & taxa == c("Poc") & x > 1 & dyn_recruitment == 1)) %>%
+ # mutate(x = ifelse(x > 5, x / 10, x)) %>%
+  filter(!(habitat == "Fore Reef" & taxa == c("Poc") & x > 1)) %>% 
+           #& dyn_recruitment == 1)) %>%
   group_by(taxa, site, habitat, transect_id, year) %>%
   summarize(n_recruits = sum(dyn_recruitment, na.rm = TRUE), .groups = "drop") %>%
   mutate(
@@ -315,7 +317,7 @@ Year-to-year for LONG term declines. ZiG: conditional is if there are no zeroes 
 q1_acr_year <- glmmTMB(
   recruits_std ~ habitat * factor(year) + site + (1 | transect_id),
   #family = tweedie(link = "log"),
-  family    = ziGamma(link = "log"),
+  family = ziGamma(link = "log"),
    ziformula = ~.,
   data      = dat_acr,
   na.action = na.exclude
@@ -354,18 +356,18 @@ view(acr_plot_data)
 ggplot(acr_plot_data) +
   geom_col(aes(x = factor(year), y = avg_recruits, fill = habitat),
            alpha = 0.5) +
-  # geom_point(aes(x = factor(year), y = predicted, col = habitat)) +
-  # geom_line(aes(x = factor(year), y = predicted, col = habitat,
-  #               group = habitat)) +
+  geom_point(aes(x = factor(year), y = predicted, col = habitat)) +
+  geom_line(aes(x = factor(year), y = predicted, col = habitat,
+                group = habitat)) +
   facet_wrap(~ habitat) +
   scale_fill_manual(
     values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"),
     name   = "Observed"
   ) +
-  # scale_color_manual(
-  #   values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"),
-  #   name   = "Predicted"
-  # ) +
+  scale_color_manual(
+    values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"),
+    name   = "Predicted"
+  ) +
   scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
   theme_bw() +
   theme( # Specify mean observed and predicted recruits
@@ -606,6 +608,43 @@ summary(q1_por_year)
 ```
 
 ```{r}
+por_summary <- dat_por %>%
+    filter(!is.na(recruits_std)) %>%
+    group_by(habitat, year, bleaching_status) %>%  # add bleaching_status here
+    summarise(
+        mean_rec = mean(recruits_std, na.rm = TRUE),
+        se_rec = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+        .groups = "drop"
+    )
+
+ggplot(por_summary %>% filter(!is.na(bleaching_status)), 
+       aes(x = factor(year), y = mean_rec, fill = bleaching_status)) +
+    geom_col(width = 0.7, col = "white", linewidth = 0.3) +
+    geom_errorbar(
+        aes(ymin = mean_rec,
+            ymax = mean_rec + se_rec),
+        width = 0.25,
+        linewidth = 0.6
+    ) +
+    facet_wrap(~ habitat) +
+    scale_fill_manual(
+        values = c(Pre = "dodgerblue", Post = "red"),
+        name = "Period",
+        labels = c(Pre = "Pre-bleaching (2013-2018)",
+                   Post = "Post-bleaching (2019-2024)")
+    ) +
+    scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
+    theme_bw() +
+    labs(
+        x = "Year",
+        y = "Mean recruits per 5 m²",
+        title = "Coral Recruitment of Porites Between Habitats (2013-2024)",
+        caption = "Bars = observed mean, error bars = +SE. 2017 not sampled."
+    )
+```
+
+
+```{r}
 # Visualization
 # Observed data (keep all years including 2017)
 por_avg_recruits_year <- dat_por %>% 
@@ -757,6 +796,41 @@ ggplot() +
 
 ```
 
+
+```{r}
+acr_summary_q2 <- dat_acr %>%
+  filter(!is.na(recruits_std)) %>%
+  group_by(site, habitat, bleaching_status) %>%
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec = sd(recruits_std, na.rm = TRUE) / sqrt(n()), # se
+    .groups = "drop"
+  )
+
+
+ggplot(acr_summary_q2,
+       aes(x = bleaching_status, y = mean_rec, fill = bleaching_status)) +
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec,
+                    ymax = mean_rec + se_rec),
+                width = 0.25) +
+  facet_grid(site ~ habitat, scales = "free_y") +
+  scale_fill_manual(
+    values = c(Pre = "dodgerblue", Post = "red"),
+    labels = c(Pre = "Pre-bleaching", Post = "Post-bleaching")
+  ) +
+  theme_bw() +
+  labs(
+    title = "Acropora Site-Habitat Wide Differences in Recruitment Before and After Bleaching",
+    x = "Bleaching Period",
+    y = "Mean recruits per 5 m²",
+    fill = "Bleaching Period"
+  ) + scale_x_discrete(labels = c(Pre = "Pre-bleaching\n(2013-2018)", 
+                             Post = "Post-bleaching\n(2019-2024)"))
+```
+
+
+
 ### Pocillopora
 
 ```{r}
@@ -771,6 +845,41 @@ summary(q2a_poc)
 # predictions to get standard errors, conversion to response space!!! 
 
 ```
+
+```{r}
+# Calculate the average observed recruits per transect at site-habitat-period level
+poc_summary_q2 <- dat_poc %>%
+  filter(!is.na(recruits_std)) %>%
+  group_by(site, habitat, bleaching_status) %>%
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec = sd(recruits_std, na.rm = TRUE) / sqrt(n()), # se
+    .groups = "drop"
+  )
+
+
+ggplot(poc_summary_q2,
+       aes(x = bleaching_status, y = mean_rec, fill = bleaching_status)) +
+  geom_col(width = 0.6, colour = "white") +
+  geom_errorbar(aes(ymin = mean_rec,
+                    ymax = mean_rec + se_rec),
+                width = 0.25) +
+  facet_grid(site ~ habitat, scales = "free_y") +
+  scale_fill_manual(
+    values = c(Pre = "dodgerblue", Post = "red"),
+    labels = c(Pre = "Pre-bleaching", Post = "Post-bleaching")
+  ) +
+  theme_bw() +
+  labs(
+    title = "Pocillopora Site-Habitat Wide Differences in Recruitment Before and After Bleaching",
+    x = "Period",
+    y = "Mean recruits per 5 m²",
+    fill = "Period"
+  ) + scale_x_discrete(labels = c(Pre = "Pre-bleaching\n(2013-2018)", 
+                             Post = "Post-bleaching\n(2019-2024)"))
+```
+
+
 
 ```{r}
 # Prediction grid
@@ -924,6 +1033,41 @@ ggplot() +
     legend.position    = "bottom"
   )
 ```
+
+
+```{r}
+# Calculate the average observed recruits per transect at site-habitat-period level
+por_summary_q2 <- dat_por %>%
+  filter(!is.na(recruits_std)) %>%
+  group_by(site, habitat, bleaching_status) %>%
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec = sd(recruits_std, na.rm = TRUE) / sqrt(n()), # se
+    .groups = "drop"
+  )
+
+
+ggplot(por_summary_q2,
+       aes(x = bleaching_status, y = mean_rec, fill = bleaching_status)) +
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec,
+                    ymax = mean_rec + se_rec),
+                width = 0.25) +
+  facet_grid(site ~ habitat, scales = "free_y") +
+  scale_fill_manual(
+    values = c(Pre = "dodgerblue", Post = "red"),
+    labels = c(Pre = "Pre-bleaching", Post = "Post-bleaching")
+  ) +
+  theme_bw() +
+  labs(
+    title = "Porites Site-Habitat Wide Differences in Recruitment Before and After Bleaching",
+    x = "Bleaching Period",
+    y = "Mean recruits per 5 m²",
+    fill = "Period"
+  ) + scale_x_discrete(labels = c(Pre = "Pre-bleaching\n(2013-2018)", 
+                             Post = "Post-bleaching\n(2019-2024)"))
+```
+
 
 Porites recruitment showed an opposing pattern to Pocillopora; there was notably much higher recruitment in the back reef compared to the fore reef pre-bleaching. This pattern was clear at LTER1 (p = 0.019), consistent with this taxa’s preference for lagoonal back reefs. The preference for back reef habitat was stronger at LTER4 and LTER5, where fore reef recruitment was much lower than at LTER1 fore reef (p \< 0.001 and p = 0.003). Post-bleaching, back reef recruitment declined significantly at LTER1 (p \< 0.001), LTER2 (p = 0.003), and LTER5 (p = 0.026). This significant decrease indicates a widespread decline in Porites’ main recruitment habitat.
 
