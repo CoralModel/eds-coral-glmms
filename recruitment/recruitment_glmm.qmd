@@ -814,7 +814,7 @@ ggplot(acr_summary_q2,
   geom_errorbar(aes(ymin = mean_rec,
                     ymax = mean_rec + se_rec),
                 width = 0.25) +
-  facet_grid(site ~ habitat, scales = "free_y") +
+  facet_grid(habitat ~ site, scales = "free_y") +
   scale_fill_manual(
     values = c(Pre = "dodgerblue", Post = "red"),
     labels = c(Pre = "Pre-bleaching", Post = "Post-bleaching")
@@ -1053,7 +1053,7 @@ ggplot(por_summary_q2,
   geom_errorbar(aes(ymin = mean_rec,
                     ymax = mean_rec + se_rec),
                 width = 0.25) +
-  facet_grid(site ~ habitat, scales = "free_y") +
+  facet_grid(habitat ~ site, scales = "free_y") +
   scale_fill_manual(
     values = c(Pre = "dodgerblue", Post = "red"),
     labels = c(Pre = "Pre-bleaching", Post = "Post-bleaching")
