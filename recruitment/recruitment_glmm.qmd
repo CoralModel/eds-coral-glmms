@@ -335,7 +335,7 @@ How did recruitment differ in the lagoon and forereef between 2013 and 2024? Rec
 
 ### Acropora
 
-Changed to before and after comparison. Year-to-year for LONG term declines. ZiG: conditional is if there are no zeroes (ie. it was not there) and zero-inflated is with those zeroes (flexible). In order to interpret, will need to understand the predictions?
+Changed to before and after comparison. ZiG: conditional is if there are no zeroes (ie. it was not there) and zero-inflated is with those zeroes (flexible). In order to interpret, will need to understand the predictions?
 
 ```{r}
 #| collapse: true
@@ -350,6 +350,7 @@ dat_acr_cc$year <- droplevels(factor(dat_acr_cc$year))
 q1_acr_bleaching_status <- glmmTMB(
   recruits_std ~ habitat*bleaching_status + site + (1 | transect_id) + (1|year),
   family    = ziGamma(link = "log"),
+  #dispformula = ~habitat,
  # family = tweedie(link = "log"),
   ziformula = ~habitat,
   data      = dat_acr_cc
@@ -433,16 +434,17 @@ ggsave(
 
 ```{r}
 ## habitat-bleaching
-acr_summary <- dat_acr %>%
+## Acropora
+acr_summary <- dat_acr_cc %>%
     filter(!is.na(recruits_std)) %>%
-    group_by(habitat, bleaching_status) %>%  # add bleaching_status here
+    group_by(habitat, bleaching_status) %>%
     summarise(
         mean_rec = mean(recruits_std, na.rm = TRUE),
         se_rec = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
         .groups = "drop"
     )
 
-ggplot(acr_summary %>% filter(!is.na(bleaching_status)), 
+acr_q1_habitat_bleaching_plot <- ggplot(acr_summary %>% filter(!is.na(bleaching_status)),
        aes(x = bleaching_status, y = mean_rec, fill = bleaching_status)) +
     geom_col(width = 0.7, col = "white", linewidth = 0.3) +
     geom_errorbar(
@@ -454,18 +456,28 @@ ggplot(acr_summary %>% filter(!is.na(bleaching_status)),
     facet_wrap(~ habitat) +
     scale_fill_manual(
         values = c(Pre = "dodgerblue", Post = "red"),
-        name = "Period",
-        labels = c(Pre = "Pre-bleaching (2013-2018)",
-                   Post = "Post-bleaching (2019-2024)")
+        name = "Bleaching Event",
+        labels = c(Pre = "Before", Post = "After")
     ) +
-    scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
     theme_bw() +
     labs(
-        x = "Year",
+        x = "Period",
         y = "Mean recruits per 5 m²",
         title = "Coral Recruitment of Acropora Between Habitats (2013-2024)",
         caption = "Bars = observed mean, error bars = +SE. 2017 not sampled."
-    ) 
+    ) +
+    theme(
+        plot.background    = element_rect(fill = "transparent", color = NA),
+        legend.background  = element_rect(fill = "transparent", color = NA),
+        legend.box.background = element_rect(fill = "transparent", color = NA)
+    )
+
+acr_q1_habitat_bleaching_plot
+ggsave(
+    "recruitment/acr_q1_habitat_bleaching_plot.png",
+    acr_q1_habitat_bleaching_plot,
+    bg = "transparent"
+)
 ```
 
 ### Pocillopera
@@ -708,6 +720,8 @@ The fore reef showed a striking decline in recruitment over the time period. The
 # )
 # 
 # summary(q1_por_year)
+dat_por_cc <- dat_por[complete.cases(dat_por[, vars]), ]
+nrow(dat_por) - nrow(dat_por_cc)  
 
 q1_por_bleaching_status <- glmmTMB(
   recruits_std ~ habitat*bleaching_status + site + (1 | transect_id) + (1|year),
@@ -720,7 +734,12 @@ q1_por_bleaching_status <- glmmTMB(
 )
 summary(q1_por_bleaching_status)
 
-
+## Diagnose
+res_por1 <- simulateResiduals(q1_por_bleaching_status, n = 1000)
+plot(res_por1)
+testDispersion(res_por1)
+testZeroInflation(res_por1)
+diagnose(q1_por_bleaching_status)
 ```
 
 ```{r}
@@ -1010,7 +1029,7 @@ plotResiduals(acr_q1_res, form = model.frame(q1_acr_bleaching_status)$year)
 ####### Pocillopora
 # Try acropora
 library(DHARMa)
-poc_q1_res <- simulateResiduals(q1_poc_bleaching_status, n = 300)
+poc_q1_res <- simulateResiduals(q1_poc_bleaching_status, n = 1000)
 plot(poc_q1_res)                          # QQ + residual-vs-predicted
 testDispersion(poc_q1_res)                # over/underdispersion
 testZeroInflation(poc_q1_res)             # is the ZI part doing its job
@@ -1040,11 +1059,12 @@ Formula: site \* habitat \* bleaching_status + (1\|transect_id) + (1\|year)
 Transect_id is dropped here because every time transect_id was included it collapsed to essentially zero (1.367e-11, 1.431e-09)... means data couldn't distinguish between transects for Acropora. Sparse counts with many zeros meant there wasn't enough within-transect variation to estimate a transect-level random effect. Dropping it gave a stable and cleaner model.
 
 ```{r}
+# AIC showed that dropping transect as random effect improved model ... variance was essentially 0
 q2a_acr <- glmmTMB(
-  recruits_std ~ site*habitat*bleaching_status +  (1 | year) + (1| transect_id),
+  recruits_std ~ site*habitat*bleaching_status +  (1 | year) ,
   # family = tweedie(link = "log"),
  family    = ziGamma(link = "log"),
- ziformula = ~habitat* bleaching_status, # this combo has more var in recruits
+ ziformula = ~habitat* bleaching_status, # go over why...
   data      = dat_acr_cc
 #  na.action = na.exclude
 )
@@ -1119,8 +1139,9 @@ ggplot(acr_summary_q2,
 
 ### Pocillopora
 
-```{r}
+\*NOTE: SIGNIFICANT OVERDISPERSION (0.02)... LIKELY FROM OUTLIERS... adding habitat+bleaching_status did not improve (check the within-group variance again)
 
+```{r}
 q2a_poc <- glmmTMB(
   recruits_std ~ site * habitat * bleaching_status + (1 | transect_id) + (1 | year),
   family    = tweedie(link = "log"),
@@ -1251,6 +1272,8 @@ Recruitment patterns in Pocillopora shifted significantly in both habitats. Fore
 
 ### Porites
 
+Outliers observed in 2013
+
 ```{r}
 q2a_por <- glmmTMB(
   recruits_std ~ site * habitat * bleaching_status + (1 | transect_id) + (1 | year),
@@ -1280,6 +1303,11 @@ por_obs_q2 <- dat_por %>%
   summarize(observed = mean(recruits_std, na.rm = TRUE), .groups = "drop")
 view(por_obs_q2)
 view(por_pred_grid_q2)
+```
+
+```{r}
+outliers(res_q2a_por)
+dat_por_cc[outliers(res_q2a_por), ]
 ```
 
 ```{r}
@@ -1315,9 +1343,25 @@ ggplot(por_summary_q2,
                              Post = "Post-bleaching\n(2019-2024)"))
 ```
 
-Porites recruitment showed an opposing pattern to Pocillopora; there was notably much higher recruitment in the back reef compared to the fore reef pre-bleaching. This pattern was clear at LTER1 (p = 0.019), consistent with this taxa’s preference for lagoonal back reefs. The preference for back reef habitat was stronger at LTER4 and LTER5, where fore reef recruitment was much lower than at LTER1 fore reef (p \< 0.001 and p = 0.003). Post-bleaching, back reef recruitment declined significantly at LTER1 (p \< 0.001), LTER2 (p = 0.003), and LTER5 (p = 0.026). This significant decrease indicates a widespread decline in Porites’ main recruitment habitat.
+### Model Diagnostics
 
-Fore reef recruitment was already low before bleaching and declined further at most sites post-bleaching. However, LTER5 appeared to be relatively unchanged in recruitment at the fore reef. A significant interaction between habitat and bleaching indicated that fore reef recruitment declined more strongly than back reef recruitment at LTER1 (p = 0.012). Site-level differences showed importance: LTER2 fore reef was less affected by bleaching compared to LTER1 (p \< 0.024), while recruitment remained similar before and after bleaching at LTER5 fore reef (p \< 0.001). LTER4 showed a similar but non-significant trend (p = 0.067). At LTER5, back reef Porites recruitment declined significantly post-bleaching (p = 0.026), as contrasted with fore reef recruitment at this site.
+```{r}
+res_q2a_acr <- simulateResiduals(q2a_acr, n = 1000)
+plot(res_q2a_acr)
+testDispersion(res_q2a_acr)
+testZeroInflation(res_q2a_acr)
+testOutliers(res_q2a_acr)
+
+res_q2a_poc <- simulateResiduals(q2a_poc, n = 1000)
+plot(res_q2a_poc)
+testDispersion(res_q2a_poc)
+testZeroInflation(res_q2a_poc)
+
+res_q2a_por <- simulateResiduals(q2a_por, n = 1000)
+plot(res_q2a_por)
+testDispersion(res_q2a_por)
+testZeroInflation(res_q2a_por)
+```
 
 ### Model 2 Emmeans
 
