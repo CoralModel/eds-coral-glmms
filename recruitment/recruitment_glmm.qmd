@@ -11,11 +11,11 @@ editor_options:
 
 This document details the analysis of coral recruitment for three different taxa based on survey data recorded over nearly a decade by Dr. Hunter Lenihan for the Mo'orea Long Term Ecological Network site (MCR-LTER). The purpose of this analysis is to serve as a supporting walk through for understanding recruitment as one of three demographic profiles impacted by the 2019 bleaching event. The following question was utilized to guide the analysis:
 
-**What are island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora from 2013-2024?**
+**What are habitat-wide and island-wide differences in coral recruitment for Acropora, Porites, and Pocilopora before and after the 2019 bleaching event?**
 
 ## Data Preparation
 
-### Load and Clean
+### Data Preprocessing
 
 The following packages were required prior to conducting additional data wrangling:
 
@@ -24,7 +24,8 @@ library(tidyverse) # For tidy data
 library(glmmTMB) # For GLMM model 
 library(ggeffects) # For calculating marginal effects of each model 
 library(DHARMa) # For model checks and validation
-library(emmeans) # For estimating predicted recruits 
+library(emmeans) # For estimating predicted recruitment and contrasts 
+library(gt) # For table construction
 ```
 
 Then, the cleaned data (referenced from a separate repository) was loaded in.
@@ -60,17 +61,20 @@ write_csv(tableau_data, "~/MEDS/capstone/eds-coral-glmms/recruitment/data_recrui
 
 # Take a look at the cleaned coral dataset
 glimpse(clean_coral)
-unique(clean_coral$transect_id)
 
-view(clean_coral)
 ```
+
+Both the habitats are coded as `BR` and `OR` in the `clean_coral` dataset and were recoded as the lagoon and forereef habitats, respectively.
 
 ```{r}
 # Rename habitats 
 clean_coral$habitat <- fct_recode(clean_coral$habitat, 
                 "Lagoon" = "BR", 
                 "Forereef" = "OR")
+```
 
+Some transects were identified as duplicate records of existing transects with slightly different naming conventions. To standardize these entries, the `transect_id` values were updated so that duplicate transects were merged with their corresponding primary transect IDs.
+```{r}
 # Integrate extra transects
 clean_coral <- clean_coral %>% mutate(transect_id = case_when(
       transect_id == "LTER1_OR_TO1"         ~ "LTER1_OR_T01",
@@ -80,24 +84,12 @@ clean_coral <- clean_coral %>% mutate(transect_id = case_when(
       transect_id == "LTER5_OR_T03_PRE2020" ~ "LTER5_OR_T03",
       TRUE ~ transect_id
      ))
+
+# Ensure that each transect ID is unique to its site-habitat
 unique(clean_coral$transect_id)
-view(clean_coral)
-
 ```
 
-Check the bounds of Poc and Por in the fore reef.
-
-```{r}
-# Are there any NON recruits (corals already there)?
-clean_coral %>%
-  filter(taxa %in% c("Poc", "Por"), habitat == "Fore Reef") %>%
-  group_by(taxa, dyn_recruitment) %>%
-  summarize(
-    n = n(),
-    pct = round(100 * n() / nrow(clean_coral %>% 
-                filter(taxa %in% c("Poc", "Por"), habitat == "Fore Reef")), 1)
-  )
-```
+Both Pocillopora and Porites were sampled within 1 m2; however, some 
 
 ```{r}
 # Data checks
@@ -160,12 +152,12 @@ recruit_transect <- clean_coral %>%
   summarize(n_recruits = sum(dyn_recruitment, na.rm = TRUE), .groups = "drop") %>%
   mutate(
     n_recruits = ifelse(year == 2017, NA, n_recruits),
-  recruits_std = case_when(
-  habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits,        # already 1m²
-  TRUE ~ n_recruits / 5) ,                                                  # everything else is 5m²  # Forereef Poc/Por already in 1m²
-  #     recruits_std = case_when(
-  # habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits * 5,
-  #      TRUE ~ n_recruits) 
+  # recruits_std = case_when(
+  # habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits,        # already 1m²
+  # TRUE ~ n_recruits / 5) ,                                                  # everything else is 5m²  # Forereef Poc/Por already in 1m²
+      recruits_std = case_when(
+  habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits * 5,
+       TRUE ~ n_recruits)
     ,
     bleaching_status = factor(
       case_when(
@@ -197,7 +189,6 @@ write.csv(recruit_transect, file = "recruitment/data_recruitment/recruits_transe
 
 ```
 
-\*\*\*\*Offshore for poc are recruits are counted in the first m\^2 (check and make sure this is the case, so not find recruits past the first meter sites)
 
 ```{r}
 # Create filtered datasets for each taxa
@@ -205,37 +196,8 @@ dat_acr <- recruit_transect %>% filter(taxa == "Acr")
 dat_poc <- recruit_transect %>% filter(taxa == "Poc")
 dat_por <- recruit_transect %>% filter(taxa == "Por")
 
-# Drop 2017 and only use complete cases
-
 ```
 
-
-
-```{r}
-# Acr
-dat_acr %>% group_by(habitat, year) %>% 
-  summarize(total_recruits = sum(recruits_std)) %>%
-  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
-    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))  + 
-    labs(title = "Habitat-wide Coral Recruitment of Acropora (2013-2024)", caption = "2017 not sampled.") + theme(legend.position = "none")
-
-
-dat_por %>% group_by(habitat, year) %>% 
-  summarize(total_recruits = sum(recruits_std)) %>%
-  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
-    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
-    labs(title = "Habitat-wide Coral Recruitment of Porites (2013-2024)", caption = "2017 not sampled.") + theme(legend.position = "none")
-
-
-dat_poc %>% group_by(habitat, year) %>% 
-  summarize(total_recruits = sum(recruits_std)) %>%
-  ggplot(aes(x = factor(year), y = total_recruits, fill = habitat)) + geom_col() + facet_wrap(~habitat) + 
-    theme(legend.position = "none") + theme_bw() +  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))  +
-    labs(title = "Habitat-wide Coral Recruitment of Pocillopera (2013-2024)", caption = "2017 not sampled.") 
-
-
-
-```
 
 ## Model 1: Habitat level recruitment between bleaching periods
 
@@ -838,7 +800,7 @@ q1_por_bleaching_status <- glmmTMB(
 summary(q1_por_bleaching_status)
 
 ## Diagnose
-res_por1<- simulateResiduals(q1_por_bleaching_status, n = 250)
+res_por1<- simulateResiduals(q1_por_bleaching_status, n = 1000)
 plot(res_por1)
 testDispersion(res_por1)
 testZeroInflation(res_por1)
@@ -847,6 +809,13 @@ diagnose(q1_por_bleaching_status)
 
 Both habitats declined by the same magnitude. 
 
+```{r}
+# emmeans 
+emmeans(q1_por_bleaching_status, ~ habitat * bleaching_status, type = "response")
+# add pairs for p val
+emmeans(q1_por_bleaching_status, ~ bleaching_status | habitat, type = "response") %>%
+  pairs()
+```
 
 
 ```{r}
@@ -885,57 +854,6 @@ ggplot(por_summary %>% filter(!is.na(bleaching_status)),
     )
 ```
 
-```{r}
-# # Visualization
-# # Observed data (keep all years including 2017)
-# por_avg_recruits_year <- dat_por %>% 
-#   group_by(habitat, year) %>% 
-#   summarize(avg_recruit = mean(recruits_std, na.rm = TRUE)) %>% 
-#   ungroup()
-# 
-# # Predictions (2017 excluded) 
-# por_pred_grid_year <- dat_por %>%
-#   filter(year != 2017) %>%
-#   distinct(habitat, year)
-# 
-# por_pred_grid_year$predicted <- predict(q1_por_year, 
-#                                         newdata = por_pred_grid_year,
-#                                         type = "response",
-#                                         re.form = NA)
-# 
-# # Join observed to predictions
-# por_plot_data <- por_avg_recruits_year %>%
-#   left_join(por_pred_grid_year, by = c("habitat", "year"))
-# 
-# # Plot
-# ggplot(por_plot_data) + 
-#   geom_col(aes(x = factor(year), y = avg_recruit, fill = habitat), 
-#            alpha = 0.5) +
-#   geom_point(aes(x = factor(year), y = predicted, col = habitat)) + 
-#   geom_line(aes(x = factor(year), y = predicted, col = habitat, 
-#                 group = habitat)) +  
-#   facet_wrap(~ habitat) +
-#   scale_fill_manual(
-#     values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"),  
-#     name   = "Observed"
-#   ) +
-#   scale_color_manual(
-#     values = c("Back Reef" = "dodgerblue", "Fore Reef" = "darkorange"), 
-#     name   = "Predicted"
-#   ) +
-#   scale_x_discrete(breaks = as.character(seq(2013, 2024, by = 2))) +
-#   theme_bw() + 
-#   theme( # Specify mean observed and predicted recruits
-#     axis.text.x   = element_text(angle = 45, vjust = 1, hjust = 1),
-#     legend.position = "bottom"
-#   ) +
-#   labs(
-#     title   = "Habitat-wide Coral Recruitment of Porites (2013-2024)",
-#     y       = "Recruits per 5 m²",
-#     x       = "Year",
-#     caption = "Bars = observed mean, points = model predicted. 2017 not sampled."
-#   )
-```
 
 ```{r}
 ## habitat-bleaching
