@@ -110,7 +110,7 @@ cat("Retention rate:", round(100 * poc_after / poc_before, 1), "%\n")
 ```{r}
 # How many Por observations were excluded by the x > 1 filter
 clean_coral %>%
-  filter(taxa == "Por", habitat == "Forereef", x > 1) %>%
+  filter(taxa == "Por", habitat == "Lagoon", x > 1) %>%
   summarize(
     total_removed       = n(),
     recruits_removed    = sum(dyn_recruitment == 1, na.rm = TRUE),
@@ -119,7 +119,7 @@ clean_coral %>%
 
 # Retention rate for Por Fore Reef recruits
 por_before <- clean_coral %>%
-  filter(taxa == "Por", habitat == "Forereef", dyn_recruitment == 1) %>%
+  filter(taxa == "Por", habitat == "Lagoon", dyn_recruitment == 1) %>%
   nrow()
 
 por_after <- clean_coral %>%
@@ -143,9 +143,9 @@ Standardize recruitment for every meters squared on the POC on the forereef
 ```{r}
 # Create standardized recruits variables
 recruit_transect <- clean_coral %>%
-  filter( # Exclude Poc and Por recruits outside 1 m^2 in forereef
+  filter( # Exclude Poc recruits outside 1 m^2 in forereef
     !(habitat == "Forereef" 
-      & taxa %in% c("Poc", "Por") 
+      & taxa == "Poc" 
       & x > 1 & dyn_recruitment == 1), 
     taxa != "Mil") %>% # Exclude Milopora 
   group_by(taxa, site, habitat, transect_id, year,period) %>% 
@@ -156,7 +156,7 @@ recruit_transect <- clean_coral %>%
   # habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits,        # already 1m²
   # TRUE ~ n_recruits / 5) ,                                                  # everything else is 5m²  # Forereef Poc/Por already in 1m²
       recruits_std = case_when(
-  habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits * 5,
+  habitat == "Forereef" & taxa == "Poc" ~ n_recruits * 5,
        TRUE ~ n_recruits)
     ,
     bleaching_status = factor(
@@ -1456,12 +1456,6 @@ print(comparison_por_q2)
 ```
 
 
-
-```{r}
-outliers(res_q2a_por)
-dat_por_cc[outliers(res_q2a_por), ]
-```
-
 ```{r}
 # Calculate the average observed recruits per transect at site-habitat-period level
 por_summary_q2 <- dat_por_cc %>%
@@ -1498,7 +1492,7 @@ ggplot(por_summary_q2,
 ### Model Diagnostics
 
 ```{r}
-res_q2a_acr <- simulateResiduals(q2a_acr, n = 250)
+res_q2a_acr <- simulateResiduals(q2a_acr, n = 1000)
 plot(res_q2a_acr)
 testDispersion(res_q2a_acr)
 testZeroInflation(res_q2a_acr)
