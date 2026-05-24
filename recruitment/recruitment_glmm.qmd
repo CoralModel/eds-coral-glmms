@@ -160,9 +160,12 @@ recruit_transect <- clean_coral %>%
   summarize(n_recruits = sum(dyn_recruitment, na.rm = TRUE), .groups = "drop") %>%
   mutate(
     n_recruits = ifelse(year == 2017, NA, n_recruits),
-      recruits_std = case_when(
-  habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits * 5,
-       TRUE ~ n_recruits) 
+  recruits_std = case_when(
+  habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits,        # already 1m²
+  TRUE ~ n_recruits / 5) ,                                                  # everything else is 5m²  # Forereef Poc/Por already in 1m²
+  #     recruits_std = case_when(
+  # habitat == "Forereef" & taxa %in% c("Poc", "Por") ~ n_recruits * 5,
+  #      TRUE ~ n_recruits) 
     ,
     bleaching_status = factor(
       case_when(
@@ -663,6 +666,9 @@ diagnose(q1_poc_bleaching_status)
 ```{r}
 # emmeans 
 emmeans(q1_poc_bleaching_status, ~ habitat * bleaching_status, type = "response")
+# add pairs for p val
+emmeans(q1_poc_bleaching_status, ~ bleaching_status | habitat, type = "response") %>%
+  pairs()
 
 ```
 
