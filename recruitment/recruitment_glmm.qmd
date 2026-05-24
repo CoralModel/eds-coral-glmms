@@ -281,7 +281,7 @@ summary(q1_acr_bleaching_status)
 # emmeans
 emmeans(q1_acr_bleaching_status, 
         ~ habitat * bleaching_status, 
-        component = "response",     # <- Forces integration of the ZI part
+        component = "response", # Force integration of the zero-inflation model with the conditional model
         type = "response")
 ```
 
@@ -753,25 +753,6 @@ ggplot(poc_summary %>% filter(!is.na(bleaching_status)),
     )
 ```
 
-Pocillopora recruitment differed significantly between the back reef and fore reef across the study period, with the fore reef recruiting significantly more overall (p \< 0.001). Back reef recruitment remained relatively stable between 2013 and 2019, with only 2018 exhibiting a notable increase (p = 0.035). A significant decline in recruitment followed by 2021 (p = 0.004).
-
-The fore reef showed a striking decline in recruitment over the time period. The fore reef was the dominant recruitment habitat in 2013 but declined sharply relatively to the back reef from 2014 onwards (p = 0.028). This divergence in recruitment away from the back reef became increasingly significant through the post-bleaching year; every year from 2018-2024 showed a highly significant reduction in fore reef recruitment relative to 2013 (all p \< 0.001) except 2016 (p = 0.016). Recruitment was worse in the fore reef in 2022 (p \< 0.001) and did not show signs of significant recovery through 2024 (p \< 0.001).
-
-#### 
-
-```{r}
-# Model validation 
-## Model validation and assumptions 
-
-
-# 1. for negative binomial, we will need to test for the overdispersion (qqplot), heteroscedacity, and zero-inflation
-
-# 2. Residual diagnostics (outliers, non-normality, or deviations)
-# Plot of predicted vs actual, should not see any curvature, will get noise but on the line mostly 
-
-# Q2A (data never really matches the model... how different is the model from the assumption)
-# switch to tweedie model for #Q2a.. try tweedie() 
-```
 
 ### Porites
 
@@ -807,7 +788,7 @@ testZeroInflation(res_por1)
 diagnose(q1_por_bleaching_status)
 ```
 
-Both habitats declined by the same magnitude. 
+Both habitats declined by the same magnitude (interaction term not significant). 
 
 ```{r}
 # emmeans 
@@ -892,9 +873,7 @@ ggplot(por_summary %>% filter(!is.na(bleaching_status)),
     ) 
 ```
 
-Porites recruitment was significantly higher in the back reef than the forereef across the entire study period (p \< 0.001), making it the only taxa to show back reef dominance. Back reef recruitment was exceptionally high in 2013 then declined sharply and significantly every subsequent year (all p \< 0.001), with the steepest drops occurring after 2019 and bottoming out in 2024, worst year on record (p \< 0.001). This monotonic decline suggests a long-term suppression of back reef Porites recruitment that predates the bleaching event and worsened dramatically after it.
 
-The forereef told a different story. While it recruited significantly less than the back reef overall, the gap between habitats narrowed significantly in 2018 and 2019 (p = 0.021 and p = 0.037) as the back reef collapsed faster than the forereef during the bleaching period. By 2024 the interaction term reversed significantly (p = 0.009), not because the forereef recovered, but because the back reef had declined so severely that the two habitats converged near zero. This convergence reflects a system-wide collapse of Porites recruitment rather than any habitat-specific recovery, consistent with the near-zero values visible across both habitats in the post-2019 period.Model Validation
 
 ```{r}
 ## habitat-bleaching
@@ -934,6 +913,7 @@ ggplot(por_summary %>% filter(!is.na(bleaching_status)),
 ```
 
 ### Model 1 Coefficient Tables
+Just do emmeans here and contrasts between habitats for each taxa
 
 ```{r}
 models1 <- list(
