@@ -380,9 +380,9 @@ For the *Acropora* zero-inflation component, the three-way interaction caused se
 ```{r}
 coral_acr_hab_site <- glmmTMB(
   recruits_std ~ site * habitat * period + (1 | year),
-  family    = ziGamma(link = "log"),
+  family = ziGamma(link = "log"),
   ziformula = ~ habitat * period + site,
-  data      = dat_acr_cc
+  data  = dat_acr_cc
 )
 
 summary(coral_acr_hab_site)
@@ -393,7 +393,7 @@ summary(coral_acr_hab_site)
 ```{r}
 coral_poc_hab_site <- glmmTMB(
   recruits_std ~ site * habitat * period + (1 | transect_id) + (1 | year),
-  family    = tweedie(link = "log"),
+  family = tweedie(link = "log"),
  dispformula = ~habitat, # Handles within-variance best (interacting with site or period made simulated residuals significant and worsened the dispersion), term is significant
   data = dat_poc_cc,
 )
@@ -406,7 +406,7 @@ summary(coral_poc_hab_site)
 ```{r}
 coral_por_hab_site <- glmmTMB(
   recruits_std ~ site * habitat * period + (1 | transect_id) + (1 | year),
-  family    = tweedie(link = "log"),
+  family = tweedie(link = "log"),
  # dispformula = ~habitat, # not needed since no significant within-group variance
   data = dat_por_cc
  )
