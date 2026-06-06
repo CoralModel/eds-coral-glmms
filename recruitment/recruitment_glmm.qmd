@@ -38,7 +38,7 @@ Load the cleaned data (referenced from a separate repository).
 #| warning: false
 coral <- read_csv(here::here("..", "eds-coral-data-storage-management", "analysisdata", "coral_demography_analysis_data.csv"), guess_max = 10000) # Corrects column types
 
-glimpse(clean_coral)
+glimpse(coral)
 ```
 
 In case of habitats being coded as `BR` and `OR` in the data, the following can be recoded as lagoon and forereef, respectively.
@@ -228,6 +228,8 @@ acr_plot_hab <- ggplot(acr_summary_hab,
         title = element_text(size = 9.5), 
         plot.caption = element_text(size = 7))
 
+acr_plot_hab
+
 ggsave(
     "recruitment/figs/acr_hab_plot.png",
     acr_plot_hab, 
@@ -273,6 +275,8 @@ poc_plot_hab <- ggplot(poc_summary_hab,
         title = element_text(size = 9), 
         plot.caption = element_text(size = 7))
 
+poc_plot_hab
+
 ggsave(
     "recruitment/figs/poc_hab_plot.png",
     poc_plot_hab, 
@@ -317,6 +321,8 @@ por_plot_hab <- ggplot(por_summary_hab,
         axis.title.y = element_text(size = 8),
         title = element_text(size = 9), 
         plot.caption = element_text(size = 7))
+
+por_plot_hab
 
 ggsave(
     "recruitment/figs/por_hab_plot.png",
@@ -447,6 +453,8 @@ acr_plot_hab_site <- ggplot(acr_summary_hab_site,
         title = element_text(size = 8), 
         plot.caption = element_text(size = 7))
 
+acr_plot_hab_site
+
 ggsave(
     "recruitment/figs/acr_hab_site_plot.png",
     acr_plot_hab_site, 
@@ -491,6 +499,8 @@ poc_plot_hab_site <- ggplot(poc_summary_hab_site,
         title = element_text(size = 8), 
         plot.caption = element_text(size = 7))
 
+poc_plot_hab_site
+
 ggsave(
     "recruitment/figs/poc_hab_site_plot.png",
     poc_plot_hab_site, 
@@ -534,6 +544,8 @@ por_plot_hab_site <- ggplot(por_summary_hab_site,
         axis.title.y = element_text(size = 8),
         title = element_text(size = 8), 
         plot.caption = element_text(size = 7))
+
+por_plot_hab_site
 
 ggsave(
     "recruitment/figs/por_hab_site_plot.png",
