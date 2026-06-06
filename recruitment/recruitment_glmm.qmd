@@ -231,7 +231,7 @@ acr_plot_hab <- ggplot(acr_summary_hab,
 acr_plot_hab
 
 ggsave(
-    "recruitment/figs/acr_hab_plot.png",
+    "recruitment/figs/acr_recruitment_hab_plot.png",
     acr_plot_hab, 
     width = 6.5, 
     height = 4,
@@ -278,7 +278,7 @@ poc_plot_hab <- ggplot(poc_summary_hab,
 poc_plot_hab
 
 ggsave(
-    "recruitment/figs/poc_hab_plot.png",
+    "recruitment/figs/poc_recruitment_hab_plot.png",
     poc_plot_hab, 
     width = 6.5, 
     height = 4,
@@ -325,7 +325,7 @@ por_plot_hab <- ggplot(por_summary_hab,
 por_plot_hab
 
 ggsave(
-    "recruitment/figs/por_hab_plot.png",
+    "recruitment/figs/por_recruitment_hab_plot.png",
     por_plot_hab, 
     width = 6.5, 
     height = 4,
@@ -456,7 +456,7 @@ acr_plot_hab_site <- ggplot(acr_summary_hab_site,
 acr_plot_hab_site
 
 ggsave(
-    "recruitment/figs/acr_hab_site_plot.png",
+    "recruitment/figs/acr_recruitment_hab_site_plot.png",
     acr_plot_hab_site, 
     width = 6.5, 
     height = 4,
@@ -502,7 +502,7 @@ poc_plot_hab_site <- ggplot(poc_summary_hab_site,
 poc_plot_hab_site
 
 ggsave(
-    "recruitment/figs/poc_hab_site_plot.png",
+    "recruitment/figs/poc_recruitment_hab_site_plot.png",
     poc_plot_hab_site, 
     width = 6.5, 
     height = 4,
@@ -548,7 +548,7 @@ por_plot_hab_site <- ggplot(por_summary_hab_site,
 por_plot_hab_site
 
 ggsave(
-    "recruitment/figs/por_hab_site_plot.png",
+    "recruitment/figs/por_recruitment_hab_site_plot.png",
     por_plot_hab_site, 
     width = 6.5, 
     height = 4,
