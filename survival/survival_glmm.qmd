@@ -1,6 +1,9 @@
 ---
 title: "Survivorship GLMM"
 format: html
+execute:
+  warning: false
+  
 ---
 
 # Overview
@@ -30,7 +33,6 @@ library(gt)
 ```
 
 # Data Preparation
-
 ```{r}
 coral <- read_csv(here::here("..", "eds-coral-data-storage-management", "analysisdata", "coral_demography_analysis_data.csv"), guess_max = 10000) # Corrects column types
 
@@ -119,11 +121,66 @@ summary(poc_hab_surv_mod)
 summary(por_hab_surv_mod)
 ```
 
-## Visualize models
+## EEMeans
+```{r}
+# Acropora
+emtrends(acr_surv_mod, ~ site * habitat * period, var = "log_size")
+pairs(emtrends(acr_surv_mod, ~ site * habitat * period, var = "log_size"))
 
+# Pocillopora
+emtrends(poc_surv_mod, ~ site * habitat * period, var = "log_size")
+pairs(emtrends(poc_surv_mod, ~ site * habitat * period, var = "log_size"))
+
+# Porites
+emtrends(por_surv_mod, ~ site * habitat * period, var = "log_size")
+pairs(emtrends(por_surv_mod, ~ site * habitat * period, var = "log_size"))
+```
+
+## Constrast tables
+```{r}
+
+models <- list(ACR = acr_hab_surv_mod, POC = poc_hab_surv_mod, POR = por_hab_surv_mod)
+
+# Group-specific slopes
+slopes <- imap_dfr(models, ~ as.data.frame(
+  emtrends(.x, ~ habitat * period, var = "log_size")
+) %>% mutate(taxon = .y))
+
+# Within-habitat period contrasts
+contrasts <- imap_dfr(models, ~ as.data.frame(
+  pairs(emtrends(.x, ~ period | habitat, var = "log_size"))
+) %>% mutate(taxon = .y))
+
+# Clean table
+contrasts %>%
+  dplyr::select(taxon, habitat, contrast, estimate, SE, z.ratio, p.value) %>%
+  mutate(
+    across(c(estimate, SE, z.ratio), \(x) round(x, 3)),
+    sig = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      TRUE ~ ""
+    ),
+    p.value = format.pval(p.value, digits = 2, eps = 0.001)
+  ) %>%
+  arrange(taxon, habitat) %>%
+  gt(groupname_col = "taxon") %>%
+  cols_label(
+    habitat = "Habitat",
+    contrast = "Contrast",
+    estimate = "Δ slope",
+    z.ratio = "z",
+    p.value = "p",
+    sig = ""
+  ) %>%
+  tab_header(title = "Change in size-dependent growth slope after 2019 bleaching")
+```
+
+## Visualize models
 ### *Acropora*
 ```{r}
-ggplot(coral_acr_hab_clean, aes(log_size, survival)) +
+ggplot(coral_acr_hab, aes(log_size, survival)) +
   geom_point(alpha = 0.5, color = "black") +
   geom_line(aes(y = pred_surv, color = period)) +
   scale_color_manual(values = c("dodgerblue", "red"), labels = c("Pre-bleaching", "Post-bleaching")) +
@@ -193,16 +250,7 @@ ggplot(coral_por_hab, aes(log_size, survival)) +
 #ggsave(here::here("survival", "figs", "coral_por_hab_fig.png"), height = 5, width = 10)
 ```
 
-## Model Checks
-
-```{r}
-performance(poc_hab_surv_mod)
-
-performance(acr_hab_surv_mod)
-
-performance(por_hab_surv_mod)
-```
-
+## Model checks
 ### *Acropora* residuals
 ```{r}
 acr_hab_surv_mod_output <- simulateResiduals(fittedModel = acr_hab_surv_mod, plot = FALSE)
@@ -270,6 +318,62 @@ coral_por$pred_surv <- predict(por_surv_mod, type = "response", re.form = NA, na
 summary(acr_surv_mod)
 summary(poc_surv_mod)
 summary(por_surv_mod)
+```
+
+## EEMeans
+```{r}
+# Acropora
+emtrends(acr_hab_surv_mod, ~ habitat * period, var = "log_size")
+pairs(emtrends(acr_hab_surv_mod, ~ habitat * period, var = "log_size"))
+
+# Pocillopora
+emtrends(poc_hab_surv_mod, ~ habitat * period, var = "log_size")
+pairs(emtrends(poc_hab_surv_mod, ~ habitat * period, var = "log_size"))
+
+# Porites
+emtrends(por_hab_surv_mod, ~ habitat * period, var = "log_size")
+pairs(emtrends(por_hab_surv_mod, ~ habitat * period, var = "log_size"))
+```
+
+## Constrast tables
+```{r}
+
+models2 <- list(ACR = acr_surv_mod, POC = poc_surv_mod, POR = por_surv_mod)
+
+# Group-specific slopes
+slopes <- imap_dfr(models2, ~ as.data.frame(
+  emtrends(.x, ~ site * habitat * period, var = "log_size")
+) %>% mutate(taxon = .y))
+
+# Within-habitat period contrasts
+contrasts <- imap_dfr(models2, ~ as.data.frame(
+  pairs(emtrends(.x, ~ period | site * habitat, var = "log_size"))
+) %>% mutate(taxon = .y))
+
+# Clean table
+contrasts %>%
+  dplyr::select(taxon, site, habitat, contrast, estimate, SE, z.ratio, p.value) %>%
+  mutate(
+    across(c(estimate, SE, z.ratio), \(x) round(x, 3)),
+    sig = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      TRUE ~ ""
+    ),
+    p.value = format.pval(p.value, digits = 2, eps = 0.001)
+  ) %>%
+  arrange(taxon, site, habitat) %>%
+  gt(groupname_col = "taxon") %>%
+  cols_label(
+    habitat = "Habitat",
+    contrast = "Contrast",
+    estimate = "Δ slope",
+    z.ratio = "z",
+    p.value = "p",
+    sig = ""
+  ) %>%
+  tab_header(title = "Change in size-dependent growth slope after 2019 bleaching")
 ```
 
 
@@ -347,13 +451,6 @@ ggplot(coral_por, aes(log_size, survival)) +
 
 
 ## Model Checks
-```{r}
-performance(poc_surv_mod)
-
-performance(acr_surv_mod)
-
-performance(por_surv_mod)
-```
 
 ### *Acropora* residuals
 ```{r}
@@ -373,112 +470,3 @@ por_surv_mod_output <- simulateResiduals(fittedModel = por_surv_mod, plot = FALS
 plot(por_surv_mod_output)
 ```
 
-
-# Output tables
-```{r}
-# Acropora
-emtrends(acr_hab_surv_mod, ~ habitat * period, var = "log_size")
-pairs(emtrends(acr_hab_surv_mod, ~ habitat * period, var = "log_size"))
-
-# Pocillopora
-emtrends(poc_hab_surv_mod, ~ habitat * period, var = "log_size")
-pairs(emtrends(poc_hab_surv_mod, ~ habitat * period, var = "log_size"))
-
-# Porites
-emtrends(por_hab_surv_mod, ~ habitat * period, var = "log_size")
-pairs(emtrends(por_hab_surv_mod, ~ habitat * period, var = "log_size"))
-```
-
-```{r}
-
-models <- list(ACR = acr_hab_surv_mod, POC = poc_hab_surv_mod, POR = por_hab_surv_mod)
-
-# Group-specific slopes
-slopes <- imap_dfr(models, ~ as.data.frame(
-  emtrends(.x, ~ habitat * period, var = "log_size")
-) %>% mutate(taxon = .y))
-
-# Within-habitat period contrasts
-contrasts <- imap_dfr(models, ~ as.data.frame(
-  pairs(emtrends(.x, ~ period | habitat, var = "log_size"))
-) %>% mutate(taxon = .y))
-
-# Clean table
-contrasts %>%
-  dplyr::select(taxon, habitat, contrast, estimate, SE, z.ratio, p.value) %>%
-  mutate(
-    across(c(estimate, SE, z.ratio), \(x) round(x, 3)),
-    sig = case_when(
-      p.value < 0.001 ~ "***",
-      p.value < 0.01  ~ "**",
-      p.value < 0.05  ~ "*",
-      TRUE ~ ""
-    ),
-    p.value = format.pval(p.value, digits = 2, eps = 0.001)
-  ) %>%
-  arrange(taxon, habitat) %>%
-  gt(groupname_col = "taxon") %>%
-  cols_label(
-    habitat = "Habitat",
-    contrast = "Contrast",
-    estimate = "Δ slope",
-    z.ratio = "z",
-    p.value = "p",
-    sig = ""
-  ) %>%
-  tab_header(title = "Change in size-dependent growth slope after 2019 bleaching")
-```
-
-```{r}
-# Acropora
-emtrends(acr_surv_mod, ~ site * habitat * period, var = "log_size")
-pairs(emtrends(acr_surv_mod, ~ site * habitat * period, var = "log_size"))
-
-# Pocillopora
-emtrends(poc_surv_mod, ~ site * habitat * period, var = "log_size")
-pairs(emtrends(poc_surv_mod, ~ site * habitat * period, var = "log_size"))
-
-# Porites
-emtrends(por_surv_mod, ~ site * habitat * period, var = "log_size")
-pairs(emtrends(por_surv_mod, ~ site * habitat * period, var = "log_size"))
-```
-
-```{r}
-
-models2 <- list(ACR = acr_surv_mod, POC = poc_surv_mod, POR = por_surv_mod)
-
-# Group-specific slopes
-slopes <- imap_dfr(models2, ~ as.data.frame(
-  emtrends(.x, ~ site * habitat * period, var = "log_size")
-) %>% mutate(taxon = .y))
-
-# Within-habitat period contrasts
-contrasts <- imap_dfr(models2, ~ as.data.frame(
-  pairs(emtrends(.x, ~ period | site * habitat, var = "log_size"))
-) %>% mutate(taxon = .y))
-
-# Clean table
-contrasts %>%
-  dplyr::select(taxon, site, habitat, contrast, estimate, SE, z.ratio, p.value) %>%
-  mutate(
-    across(c(estimate, SE, z.ratio), \(x) round(x, 3)),
-    sig = case_when(
-      p.value < 0.001 ~ "***",
-      p.value < 0.01  ~ "**",
-      p.value < 0.05  ~ "*",
-      TRUE ~ ""
-    ),
-    p.value = format.pval(p.value, digits = 2, eps = 0.001)
-  ) %>%
-  arrange(taxon, site, habitat) %>%
-  gt(groupname_col = "taxon") %>%
-  cols_label(
-    habitat = "Habitat",
-    contrast = "Contrast",
-    estimate = "Δ slope",
-    z.ratio = "z",
-    p.value = "p",
-    sig = ""
-  ) %>%
-  tab_header(title = "Change in size-dependent growth slope after 2019 bleaching")
-```
