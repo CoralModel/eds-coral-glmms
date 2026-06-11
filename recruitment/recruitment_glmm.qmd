@@ -692,3 +692,297 @@ all_contrasts_2 %>%
   ) %>%
   tab_header(title = "Pairwise Differences of Coral Recruitment by Site and Habitat Following the 2019 Bleaching Event")
 ```
+
+## Time-series Visualizations
+
+The following code cells produce a time series for average recruitment for each taxa across the study period (2013-2024).
+
+```{r}
+#| code-fold: true
+# Acropora time series on the forereef
+acr_summary_fore_bar <- dat_acr_cc %>%
+  filter(habitat == "Forereef") %>%
+  group_by(site, year, period) %>%  
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec   = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+acr_bar_fore_plot <- ggplot(acr_summary_fore_bar,
+       aes(x = factor(year), y = mean_rec, fill = factor(period))) + 
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec, ymax = mean_rec + se_rec), width = 0.25) +
+  facet_grid(~ site, scales = "free_y") +
+  scale_fill_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Pre-bleaching", "1" = "Post-bleaching")
+  ) +
+  # Label only 2013, 2019, and 2024 on the x-axis
+  scale_x_discrete(breaks = c("2013", "2019", "2024"), 
+                   labels = c("2013", "2019", "2024")) +
+  theme_bw() +
+  labs(
+    title = "Average Annual Recruitment of Acropora on the Forereef Before and After Bleaching (2013-2024)",
+    x = "Year",
+    y = "Mean recruits per 5 m²",
+    fill = "Period", 
+    caption = "2017 was not sampled. Recruits were summed at the transect level and averaged at the site-year-period level."
+  ) +
+  theme(axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13),
+        title = element_text(size = 14), 
+        plot.caption = element_text(size = 7), 
+        panel.spacing.x = unit(1, "lines"))
+
+acr_bar_fore_plot
+
+ggsave(
+    "recruitment/figs/time-series-recruitment/acr_recruitment_time_fore_plot.png",
+    acr_bar_fore_plot, 
+    width = 12, 
+    height = 5,
+    dpi = 300
+)
+```
+
+```{r}
+#| code-fold: true
+# Acropora time series on the lagoon
+acr_summary_lag_bar <- dat_acr_cc %>%
+  filter(habitat == "Lagoon") %>%
+  group_by(site, year, period) %>%  
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec   = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+acr_bar_lag_plot <- ggplot(acr_summary_lag_bar,
+       aes(x = factor(year), y = mean_rec, fill = factor(period))) + 
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec, ymax = mean_rec + se_rec), width = 0.25) +
+  facet_grid(~ site, scales = "free_y") +
+  scale_fill_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Pre-bleaching", "1" = "Post-bleaching")
+  ) +
+  scale_x_discrete(breaks = c("2013", "2019", "2024"), 
+                   labels = c("2013", "2019", "2024")) +
+  theme_bw() +
+  labs(
+    title = "Average Annual Recruitment of Acropora on the Lagoon Before and After Bleaching (2013-2024)",
+    x = "Year",
+    y = "Mean recruits per 5 m²",
+    fill = "Period", 
+    caption = "2017 was not sampled. Recruits were summed at the transect level and averaged at the site-year-period level."
+  ) +
+  theme(axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13),
+        title = element_text(size = 14), 
+        plot.caption = element_text(size = 7), 
+        panel.spacing.x = unit(1, "lines"))
+
+acr_bar_lag_plot
+
+ggsave(
+    "recruitment/figs/time-series-recruitment/acr_recruitment_time_lag_plot.png",
+    acr_bar_lag_plot, 
+    width = 12, 
+    height = 5,
+    dpi = 300
+)
+```
+
+```{r}
+#| code-fold: true
+# Pocillopora time series on the forereef
+poc_summary_fore_bar <- dat_poc_cc %>%
+  filter(habitat == "Forereef") %>%
+  group_by(site, year, period) %>%  
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec   = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+poc_bar_fore_plot <- ggplot(poc_summary_fore_bar,
+       aes(x = factor(year), y = mean_rec, fill = factor(period))) + 
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec, ymax = mean_rec + se_rec), width = 0.25) +
+  facet_grid(~ site, scales = "free_y") +
+  scale_fill_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Pre-bleaching", "1" = "Post-bleaching")
+  ) +
+  # Label only 2013, 2019, and 2024 on the x-axis
+  scale_x_discrete(breaks = c("2013", "2019", "2024"), 
+                   labels = c("2013", "2019", "2024")) +
+  theme_bw() +
+  labs(
+    title = "Average Annual Recruitment of Pocillopora on the Forereef Before and After Bleaching (2013-2024)",
+    x = "Year",
+    y = "Mean recruits per 5 m²",
+    fill = "Period", 
+    caption = "2017 was not sampled. Recruits were summed at the transect level and averaged at the site-year-period level."
+  ) +
+  theme(axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13),
+        title = element_text(size = 13.5), 
+        plot.caption = element_text(size = 7), 
+        panel.spacing.x = unit(1, "lines"))
+
+poc_bar_fore_plot
+
+ggsave(
+    "recruitment/figs/time-series-recruitment/poc_recruitment_time_fore_plot.png",
+    poc_bar_fore_plot, 
+    width = 12, 
+    height = 5,
+    dpi = 300
+)
+```
+
+```{r}
+#| code-fold: true
+# Pocillopora time series on the lagoon
+poc_summary_lag_bar <- dat_poc_cc %>%
+  filter(habitat == "Lagoon") %>%
+  group_by(site, year, period) %>%  
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec   = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+poc_bar_lag_plot <- ggplot(poc_summary_lag_bar,
+       aes(x = factor(year), y = mean_rec, fill = factor(period))) + 
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec, ymax = mean_rec + se_rec), width = 0.25) +
+  facet_grid(~ site, scales = "free_y") +
+  scale_fill_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Pre-bleaching", "1" = "Post-bleaching")
+  ) +
+  scale_x_discrete(breaks = c("2013", "2019", "2024"), 
+                   labels = c("2013", "2019", "2024")) +
+  theme_bw() +
+  labs(
+    title = "Average Annual Recruitment of Pocillopora on the Lagoon Before and After Bleaching (2013-2024)",
+    x = "Year",
+    y = "Mean recruits per 5 m²",
+    fill = "Period", 
+    caption = "2017 was not sampled. Recruits were summed at the transect level and averaged at the site-year-period level."
+  ) +
+  theme(axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13),
+        title = element_text(size = 14), 
+        plot.caption = element_text(size = 7), 
+        panel.spacing.x = unit(1, "lines"))
+
+poc_bar_lag_plot
+
+ggsave(
+    "recruitment/figs/time-series-recruitment/poc_recruitment_time_lag_plot.png",
+    poc_bar_lag_plot, 
+    width = 12, 
+    height = 5,
+    dpi = 300
+)
+```
+
+```{r}
+#| code-fold: true
+# Porites time series on the forereef
+por_summary_fore_bar <- dat_por_cc %>%
+  filter(habitat == "Forereef") %>%
+  group_by(site, year, period) %>%  
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec   = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+por_bar_fore_plot <- ggplot(por_summary_fore_bar,
+       aes(x = factor(year), y = mean_rec, fill = factor(period))) + 
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec, ymax = mean_rec + se_rec), width = 0.25) +
+  facet_grid(~ site, scales = "free_y") +
+  scale_fill_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Pre-bleaching", "1" = "Post-bleaching")
+  ) +
+  scale_x_discrete(breaks = c("2013", "2019", "2024"), 
+                   labels = c("2013", "2019", "2024")) +
+  theme_bw() +
+  labs(
+    title = "Average Annual Recruitment of Porites on the Forereef Before and After Bleaching (2013-2024)",
+    x = "Year",
+    y = "Mean recruits per 5 m²",
+    fill = "Period", 
+    caption = "2017 was not sampled. Recruits were summed at the transect level and averaged at the site-year-period level."
+  ) +
+  theme(axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13),
+        title = element_text(size = 14), 
+        plot.caption = element_text(size = 7), 
+        panel.spacing.x = unit(1, "lines"))
+
+por_bar_fore_plot
+
+ggsave(
+    "recruitment/figs/time-series-recruitment/por_recruitment_time_fore_plot.png",
+    por_bar_fore_plot, 
+    width = 12, 
+    height = 5,
+    dpi = 300
+)
+```
+
+```{r}
+#| code-fold: true
+# Porites time series on the lagoon
+por_summary_lag_bar <- dat_por_cc %>%
+  filter(habitat == "Lagoon") %>%
+  group_by(site, year, period) %>%  
+  summarise(
+    mean_rec = mean(recruits_std, na.rm = TRUE),
+    se_rec   = sd(recruits_std, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+por_bar_lag_plot <- ggplot(por_summary_lag_bar,
+       aes(x = factor(year), y = mean_rec, fill = factor(period))) + 
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_rec, ymax = mean_rec + se_rec), width = 0.25) +
+  facet_grid(~ site, scales = "free_y") +
+  scale_fill_manual(
+    values = c("0" = "dodgerblue", "1" = "red"),
+    labels = c("0" = "Pre-bleaching", "1" = "Post-bleaching")
+  ) +
+  scale_x_discrete(breaks = c("2013", "2019", "2024"), 
+                   labels = c("2013", "2019", "2024")) +
+  theme_bw() +
+  labs(
+    title = "Average Annual Recruitment of Porites on the Lagoon Before and After Bleaching (2013-2024)",
+    x = "Year",
+    y = "Mean recruits per 5 m²",
+    fill = "Period", 
+    caption = "2017 was not sampled. Recruits were summed at the transect level and averaged at the site-year-period level."
+  ) +
+  theme(axis.title.y = element_text(size = 13),
+        axis.title.x = element_text(size = 13),
+        title = element_text(size = 14), 
+        plot.caption = element_text(size = 7), 
+        panel.spacing.x = unit(1, "lines"))
+
+por_bar_lag_plot
+
+ggsave(
+    "recruitment/figs/time-series-recruitment/por_recruitment_time_lag_plot.png",
+    por_bar_lag_plot, 
+    width = 12, 
+    height = 5,
+    dpi = 300
+)
+```
