@@ -5,7 +5,7 @@ format:
   html:
     toc: true
     toc-depth: 3
-    code-fold: true
+    code-fold: false
     self-contained: true
 editor: visual
 ---
@@ -143,6 +143,8 @@ summary(m1_poc)
 summary(m1_por)
 ```
 
+## Model 1 Growth Rates
+
 ```{r}
 # Acropora
 emtrends(m1_acr, ~ habitat * period, var = "log10_size_t0")
@@ -247,6 +249,8 @@ ggplot() +
   theme_bw() +
   labs(title = "Acropora Size-Dependent Growth Across Habitats", x = "Initial size (cm³)", y = "Final size (cm³)", color = "Period")
 
+ggsave(here::here("growth", "figs", "acr_growth_hab_plot.png"), height = 5, width = 10)
+
 ggplot() +
   geom_point(data = growth_poc,
              aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
@@ -260,6 +264,8 @@ ggplot() +
   scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw() +
   labs(title = "Pocillopora Size-Dependent Growth Across Habitats", x = "Initial size (cm³)", y = "Final size (cm³)", color = "Period")
+
+ggsave(here::here("growth", "figs", "poc_growth_hab_plot.png"), height = 5, width = 10)
 
 ggplot() +
   geom_point(data = growth_por,
@@ -275,8 +281,6 @@ ggplot() +
   theme_bw() +
   labs(title = "Porites Size-Dependent Growth Across Habitats", x = "Initial size (cm³)", y = "Final size (cm³)", color = "Period")
 
-ggsave(here::here("growth", "figs", "acr_growth_hab_plot.png"), height = 5, width = 10)
-ggsave(here::here("growth", "figs", "poc_growth_hab_plot.png"), height = 5, width = 10)
 ggsave(here::here("growth", "figs", "por_growth_hab_plot.png"), height = 5, width = 10)
    
 ```
@@ -353,6 +357,24 @@ m2_por <- glmmTMB(
 summary(m2_acr)
 summary(m2_poc)
 summary(m2_por)
+```
+
+## Model 2 Growth Rates
+
+```{r}
+# Acropora
+emtrends(m2_acr, ~ site * habitat * period, var = "log10_size_t0")
+```
+
+```{r}
+# Pocillopora
+emtrends(m2_poc, ~ site * habitat * period, var = "log10_size_t0")
+```
+
+```{r}
+
+# Porites
+emtrends(m2_por, ~ site * habitat * period, var = "log10_size_t0")
 ```
 
 ```{r}
@@ -440,6 +462,8 @@ ggplot() +
   scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw()
 
+ggsave(here::here("growth", "figs", "acr_site_growth_plot.png"), height = 5, width = 10)
+
 ggplot() +
   geom_point(data = growth_poc,
              aes(x = log10_size_t0, y = log10_size_t1), alpha = 0.3, size = 0.8) +
@@ -455,6 +479,8 @@ ggplot() +
   scale_x_continuous(labels = scales::label_math(10^.x)) +
   scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw()
+
+ggsave(here::here("growth", "figs", "poc_site_growth_plot.png"), height = 5, width = 10)
 
 ggplot() +
   geom_point(data = growth_por,
@@ -472,9 +498,6 @@ ggplot() +
   scale_y_continuous(labels = scales::label_math(10^.x)) +
   theme_bw()
 
-
-ggsave(here::here("growth", "figs", "acr_site_growth_plot.png"), height = 5, width = 10)
-ggsave(here::here("growth", "figs", "poc_site_growth_plot.png"), height = 5, width = 10)
 ggsave(here::here("growth", "figs", "por_site_growth_plot.png"), height = 5, width = 10)
 ```
 

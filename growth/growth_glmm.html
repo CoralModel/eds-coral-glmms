@@ -2218,6 +2218,7 @@ vertical-align: -.125em;
   <ul class="collapse">
   <li><a href="#fit-models" id="toc-fit-models" class="nav-link" data-scroll-target="#fit-models">Fit Models</a></li>
   <li><a href="#model-summaries" id="toc-model-summaries" class="nav-link" data-scroll-target="#model-summaries">Model Summaries</a></li>
+  <li><a href="#model-1-growth-rates" id="toc-model-1-growth-rates" class="nav-link" data-scroll-target="#model-1-growth-rates">Model 1 Growth Rates</a></li>
   <li><a href="#model-checks" id="toc-model-checks" class="nav-link" data-scroll-target="#model-checks">Model Checks</a>
   <ul class="collapse">
   <li><a href="#acropora-residuals" id="toc-acropora-residuals" class="nav-link" data-scroll-target="#acropora-residuals"><em>Acropora</em> residuals</a></li>
@@ -2229,6 +2230,7 @@ vertical-align: -.125em;
   <ul class="collapse">
   <li><a href="#fit-models-1" id="toc-fit-models-1" class="nav-link" data-scroll-target="#fit-models-1">Fit Models</a></li>
   <li><a href="#model-summaries-1" id="toc-model-summaries-1" class="nav-link" data-scroll-target="#model-summaries-1">Model Summaries</a></li>
+  <li><a href="#model-2-growth-rates" id="toc-model-2-growth-rates" class="nav-link" data-scroll-target="#model-2-growth-rates">Model 2 Growth Rates</a></li>
   <li><a href="#model-checks-1" id="toc-model-checks-1" class="nav-link" data-scroll-target="#model-checks-1">Model Checks</a>
   <ul class="collapse">
   <li><a href="#acropora-residuals-1" id="toc-acropora-residuals-1" class="nav-link" data-scroll-target="#acropora-residuals-1"><em>Acropora</em> residuals</a></li>
@@ -2276,8 +2278,6 @@ vertical-align: -.125em;
 <section id="setup" class="level1">
 <h1>Setup</h1>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmmTMB)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(performance)</span>
@@ -2286,7 +2286,6 @@ vertical-align: -.125em;
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </div>
 <hr>
 </section>
@@ -2295,17 +2294,12 @@ vertical-align: -.125em;
 <section id="load-clean" class="level2">
 <h2 class="anchored" data-anchor-id="load-clean">Load &amp; Clean</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>coral_demography_analysis_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;..&quot;</span>, <span class="st">&quot;eds-coral-data-storage-management&quot;</span>, <span class="st">&quot;analysisdata&quot;</span>, <span class="st">&quot;coral_demography_analysis_data.csv&quot;</span>), <span class="at">guess_max =</span> <span class="dv">10000</span>) <span class="co"># Correct column type </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </div>
 </section>
 <section id="filter-model-preparation" class="level2">
 <h2 class="anchored" data-anchor-id="filter-model-preparation">Filter &amp; Model Preparation</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Exclusion criteria:</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># - Millepora excluded (insufficient sample size)</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># - Require both size measurements (t0 and t1 non-missing)</span></span>
@@ -2335,7 +2329,6 @@ vertical-align: -.125em;
 <span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>growth_acr <span class="ot">&lt;-</span> growth_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(taxa <span class="sc">==</span> <span class="st">&quot;Acr&quot;</span>)</span>
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>growth_poc <span class="ot">&lt;-</span> growth_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(taxa <span class="sc">==</span> <span class="st">&quot;Poc&quot;</span>)</span>
 <span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>growth_por <span class="ot">&lt;-</span> growth_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(taxa <span class="sc">==</span> <span class="st">&quot;Por&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </div>
 <hr>
 </section>
@@ -2349,8 +2342,6 @@ vertical-align: -.125em;
 <section id="fit-models" class="level2">
 <h2 class="anchored" data-anchor-id="fit-models">Fit Models</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>m1_acr <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  log10_size_t1 <span class="sc">~</span> log10_size_t0 <span class="sc">*</span> habitat <span class="sc">*</span> period <span class="sc">+</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">|</span> transect_id<span class="sc">/</span>coral_id) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> year),</span>
@@ -2370,16 +2361,12 @@ vertical-align: -.125em;
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">gaussian</span>(),</span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">data   =</span> growth_por</span>
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </div>
 </section>
 <section id="model-summaries" class="level2">
 <h2 class="anchored" data-anchor-id="model-summaries">Model Summaries</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m1_acr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: gaussian  ( identity )
 Formula:          
@@ -2416,10 +2403,7 @@ log10_size_t0:habitatOR:period1 -0.06416    0.07630  -0.841   0.4004
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m1_poc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: gaussian  ( identity )
 Formula:          
@@ -2456,10 +2440,7 @@ log10_size_t0:habitatOR:period1  0.009976   0.044295   0.225  0.82182
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m1_por)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: gaussian  ( identity )
 Formula:          
@@ -2497,12 +2478,12 @@ log10_size_t0:habitatOR:period1  0.048216   0.064875    0.74 0.457356
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
 </div>
+</section>
+<section id="model-1-growth-rates" class="level2">
+<h2 class="anchored" data-anchor-id="model-1-growth-rates">Model 1 Growth Rates</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Acropora</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emtrends</span>(m1_acr, <span class="sc">~</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> habitat period log10_size_t0.trend     SE  df asymp.LCL asymp.UCL
  BR      0                    0.706 0.0600 Inf     0.588     0.823
@@ -2512,11 +2493,8 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&
 
 Confidence level used: 0.95 </code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">contrast</span>(<span class="fu">emtrends</span>(m1_acr, <span class="sc">~</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>),</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">&quot;pairwise&quot;</span>, <span class="at">by =</span> <span class="st">&quot;habitat&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>habitat = BR:
  contrast          estimate     SE  df z.ratio p.value
@@ -2526,11 +2504,8 @@ habitat = OR:
  contrast          estimate     SE  df z.ratio p.value
  period0 - period1   0.1186 0.0396 Inf   2.996  0.0027</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pocillopora</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emtrends</span>(m1_poc, <span class="sc">~</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> habitat period log10_size_t0.trend     SE  df asymp.LCL asymp.UCL
  BR      0                    0.652 0.0244 Inf     0.604     0.700
@@ -2540,11 +2515,8 @@ habitat = OR:
 
 Confidence level used: 0.95 </code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">contrast</span>(<span class="fu">emtrends</span>(m1_poc, <span class="sc">~</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>),</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">&quot;pairwise&quot;</span>, <span class="at">by =</span> <span class="st">&quot;habitat&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>habitat = BR:
  contrast          estimate     SE  df z.ratio p.value
@@ -2554,11 +2526,8 @@ habitat = OR:
  contrast          estimate     SE  df z.ratio p.value
  period0 - period1   0.0398 0.0331 Inf   1.202  0.2293</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Porites</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emtrends</span>(m1_por, <span class="sc">~</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> habitat period log10_size_t0.trend     SE  df asymp.LCL asymp.UCL
  BR      0                    0.785 0.0094 Inf     0.766     0.803
@@ -2568,11 +2537,8 @@ habitat = OR:
 
 Confidence level used: 0.95 </code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">contrast</span>(<span class="fu">emtrends</span>(m1_por, <span class="sc">~</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>),</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>         <span class="at">method =</span> <span class="st">&quot;pairwise&quot;</span>, <span class="at">by =</span> <span class="st">&quot;habitat&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>habitat = BR:
  contrast           estimate     SE  df z.ratio p.value
@@ -2584,8 +2550,6 @@ habitat = OR:
 </div>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>models <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ACR =</span> m1_acr, <span class="at">POC =</span> m1_poc, <span class="at">POR =</span> m1_por)</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Group-specific slopes</span></span>
@@ -2622,22 +2586,21 @@ habitat = OR:
 <span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig =</span> <span class="st">&quot;&quot;</span></span>
 <span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">&quot;Change in size-dependent growth slope after 2019 bleaching&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
-<div id="ypixljuzbi" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#ypixljuzbi table {
+<div id="gqhzptqase" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#gqhzptqase table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#ypixljuzbi thead, #ypixljuzbi tbody, #ypixljuzbi tfoot, #ypixljuzbi tr, #ypixljuzbi td, #ypixljuzbi th {
+#gqhzptqase thead, #gqhzptqase tbody, #gqhzptqase tfoot, #gqhzptqase tr, #gqhzptqase td, #gqhzptqase th {
 border-style: none;
 }
-#ypixljuzbi p {
+#gqhzptqase p {
 margin: 0;
 padding: 0;
 }
-#ypixljuzbi .gt_table {
+#gqhzptqase .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -2662,11 +2625,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#ypixljuzbi .gt_caption {
+#gqhzptqase .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#ypixljuzbi .gt_title {
+#gqhzptqase .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -2677,7 +2640,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#ypixljuzbi .gt_subtitle {
+#gqhzptqase .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -2688,7 +2651,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#ypixljuzbi .gt_heading {
+#gqhzptqase .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -2699,12 +2662,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#ypixljuzbi .gt_bottom_border {
+#gqhzptqase .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#ypixljuzbi .gt_col_headings {
+#gqhzptqase .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -2718,7 +2681,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#ypixljuzbi .gt_col_heading {
+#gqhzptqase .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2737,7 +2700,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#ypixljuzbi .gt_column_spanner_outer {
+#gqhzptqase .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2748,13 +2711,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#ypixljuzbi .gt_column_spanner_outer:first-child {
+#gqhzptqase .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#ypixljuzbi .gt_column_spanner_outer:last-child {
+#gqhzptqase .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#ypixljuzbi .gt_column_spanner {
+#gqhzptqase .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -2765,10 +2728,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#ypixljuzbi .gt_spanner_row {
+#gqhzptqase .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#ypixljuzbi .gt_group_heading {
+#gqhzptqase .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2793,7 +2756,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#ypixljuzbi .gt_empty_group_heading {
+#gqhzptqase .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -2807,13 +2770,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#ypixljuzbi .gt_from_md > :first-child {
+#gqhzptqase .gt_from_md > :first-child {
 margin-top: 0;
 }
-#ypixljuzbi .gt_from_md > :last-child {
+#gqhzptqase .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#ypixljuzbi .gt_row {
+#gqhzptqase .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2831,7 +2794,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#ypixljuzbi .gt_stub {
+#gqhzptqase .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2843,7 +2806,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ypixljuzbi .gt_stub_row_group {
+#gqhzptqase .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2856,13 +2819,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#ypixljuzbi .gt_row_group_first td {
+#gqhzptqase .gt_row_group_first td {
 border-top-width: 2px;
 }
-#ypixljuzbi .gt_row_group_first th {
+#gqhzptqase .gt_row_group_first th {
 border-top-width: 2px;
 }
-#ypixljuzbi .gt_summary_row {
+#gqhzptqase .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2871,14 +2834,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ypixljuzbi .gt_first_summary_row {
+#gqhzptqase .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#ypixljuzbi .gt_first_summary_row.thick {
+#gqhzptqase .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#ypixljuzbi .gt_last_summary_row {
+#gqhzptqase .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2887,7 +2850,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#ypixljuzbi .gt_grand_summary_row {
+#gqhzptqase .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2896,7 +2859,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ypixljuzbi .gt_first_grand_summary_row {
+#gqhzptqase .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2905,7 +2868,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#ypixljuzbi .gt_last_grand_summary_row_top {
+#gqhzptqase .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2914,10 +2877,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#ypixljuzbi .gt_striped {
+#gqhzptqase .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#ypixljuzbi .gt_table_body {
+#gqhzptqase .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -2925,7 +2888,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#ypixljuzbi .gt_footnotes {
+#gqhzptqase .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2938,7 +2901,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#ypixljuzbi .gt_footnote {
+#gqhzptqase .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -2946,7 +2909,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ypixljuzbi .gt_sourcenotes {
+#gqhzptqase .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2959,64 +2922,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#ypixljuzbi .gt_sourcenote {
+#gqhzptqase .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#ypixljuzbi .gt_left {
+#gqhzptqase .gt_left {
 text-align: left;
 }
-#ypixljuzbi .gt_center {
+#gqhzptqase .gt_center {
 text-align: center;
 }
-#ypixljuzbi .gt_right {
+#gqhzptqase .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#ypixljuzbi .gt_font_normal {
+#gqhzptqase .gt_font_normal {
 font-weight: normal;
 }
-#ypixljuzbi .gt_font_bold {
+#gqhzptqase .gt_font_bold {
 font-weight: bold;
 }
-#ypixljuzbi .gt_font_italic {
+#gqhzptqase .gt_font_italic {
 font-style: italic;
 }
-#ypixljuzbi .gt_super {
+#gqhzptqase .gt_super {
 font-size: 65%;
 }
-#ypixljuzbi .gt_footnote_marks {
+#gqhzptqase .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#ypixljuzbi .gt_asterisk {
+#gqhzptqase .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#ypixljuzbi .gt_indent_1 {
+#gqhzptqase .gt_indent_1 {
 text-indent: 5px;
 }
-#ypixljuzbi .gt_indent_2 {
+#gqhzptqase .gt_indent_2 {
 text-indent: 10px;
 }
-#ypixljuzbi .gt_indent_3 {
+#gqhzptqase .gt_indent_3 {
 text-indent: 15px;
 }
-#ypixljuzbi .gt_indent_4 {
+#gqhzptqase .gt_indent_4 {
 text-indent: 20px;
 }
-#ypixljuzbi .gt_indent_5 {
+#gqhzptqase .gt_indent_5 {
 text-indent: 25px;
 }
-#ypixljuzbi .katex-display {
+#gqhzptqase .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#ypixljuzbi div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#gqhzptqase div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -3107,8 +3070,6 @@ height: 0px !important;
 </div>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># M1 prediction grids — population-level, no random effects</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a prediction grid: every habitat × period combination paired with</span></span>
@@ -3136,11 +3097,8 @@ height: 0px !important;
 <span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
 <span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>por_pred_grid_m1<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m1_por, <span class="at">newdata =</span> por_pred_grid_m1,</span>
 <span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_acr,</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
@@ -3154,7 +3112,6 @@ height: 0px !important;
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
 <span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Acropora Size-Dependent Growth Across Habitats&quot;</span>, <span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3162,22 +3119,21 @@ height: 0px !important;
 </figure>
 </div>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_poc,</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> poc_pred_grid_m1,</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period), <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="sc">~</span> habitat, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Pre-bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;Post-bleaching&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Pocillopora Size-Dependent Growth Across Habitats&quot;</span>, <span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;acr_growth_hab_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_poc,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> poc_pred_grid_m1,</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period), <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="sc">~</span> habitat, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Pre-bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;Post-bleaching&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Pocillopora Size-Dependent Growth Across Habitats&quot;</span>, <span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3185,22 +3141,21 @@ height: 0px !important;
 </figure>
 </div>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_por,</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> por_pred_grid_m1,</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period), <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="sc">~</span> habitat, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Pre-bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;Post-bleaching&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Porites Size-Dependent Growth Across Habitats&quot;</span>, <span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;poc_growth_hab_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_por,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> por_pred_grid_m1,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period), <span class="at">linewidth =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(<span class="sc">~</span> habitat, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Pre-bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;Post-bleaching&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Porites Size-Dependent Growth Across Habitats&quot;</span>, <span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3208,12 +3163,7 @@ height: 0px !important;
 </figure>
 </div>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;acr_growth_hab_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;poc_growth_hab_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;por_growth_hab_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;por_growth_hab_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="model-checks" class="level2">
@@ -3221,11 +3171,8 @@ height: 0px !important;
 <section id="acropora-residuals" class="level3">
 <h3 class="anchored" data-anchor-id="acropora-residuals"><em>Acropora</em> residuals</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>acr_growth_mod_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m1_acr, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(acr_growth_mod_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3238,11 +3185,8 @@ height: 0px !important;
 <section id="pocillopora-residuals" class="level3">
 <h3 class="anchored" data-anchor-id="pocillopora-residuals"><em>Pocillopora</em> residuals</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>poc_growth_mod_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m1_poc, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(poc_growth_mod_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3255,11 +3199,8 @@ height: 0px !important;
 <section id="porites-residuals" class="level3">
 <h3 class="anchored" data-anchor-id="porites-residuals"><em>Porites</em> residuals</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>por_growth_mod_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m1_por, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(por_growth_mod_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3281,8 +3222,6 @@ height: 0px !important;
 <section id="fit-models-1" class="level2">
 <h2 class="anchored" data-anchor-id="fit-models-1">Fit Models</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>m2_acr <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  log10_size_t1 <span class="sc">~</span> log10_size_t0 <span class="sc">*</span> site <span class="sc">*</span> habitat <span class="sc">*</span> period <span class="sc">+</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">|</span> transect_id<span class="sc">/</span>coral_id) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> year),</span>
@@ -3303,16 +3242,12 @@ height: 0px !important;
 <span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">gaussian</span>(),</span>
 <span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">data   =</span> growth_por</span>
 <span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 </div>
 </section>
 <section id="model-summaries-1" class="level2">
 <h2 class="anchored" data-anchor-id="model-summaries-1">Model Summaries</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m2_acr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: gaussian  ( identity )
 Formula:          
@@ -3406,10 +3341,7 @@ log10_size_t0:siteLTER5:habitatOR:period1
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m2_poc)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: gaussian  ( identity )
 Formula:          
@@ -3503,10 +3435,7 @@ log10_size_t0:siteLTER5:habitatOR:period1 .
 ---
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m2_por)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code> Family: gaussian  ( identity )
 Formula:          
@@ -3601,62 +3530,137 @@ log10_size_t0:siteLTER5:habitatOR:period1
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
 </div>
+</section>
+<section id="model-2-growth-rates" class="level2">
+<h2 class="anchored" data-anchor-id="model-2-growth-rates">Model 2 Growth Rates</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>models2 <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ACR =</span> m2_acr, <span class="at">POC =</span> m2_poc, <span class="at">POR =</span> m2_por)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Group-specific slopes (by site × habitat × period)</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>slopes2 <span class="ot">&lt;-</span> <span class="fu">imap_dfr</span>(models2, <span class="sc">~</span> <span class="fu">as.data.frame</span>(</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emtrends</span>(.x, <span class="sc">~</span> site <span class="sc">*</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">taxon =</span> .y))</span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Within-habitat period contrasts at each site</span></span>
-<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>contrasts2 <span class="ot">&lt;-</span> <span class="fu">imap_dfr</span>(models2, <span class="sc">~</span> <span class="fu">as.data.frame</span>(</span>
-<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pairs</span>(<span class="fu">emtrends</span>(.x, <span class="sc">~</span> period <span class="sc">|</span> site <span class="sc">*</span> habitat, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>))</span>
-<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">taxon =</span> .y))</span>
-<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean table</span></span>
-<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>contrasts2 <span class="sc">|&gt;</span></span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(taxon, site, habitat, contrast, estimate, SE, z.ratio, p.value) <span class="sc">|&gt;</span></span>
-<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(<span class="fu">c</span>(estimate, SE, z.ratio), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>)),</span>
-<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig =</span> <span class="fu">case_when</span>(</span>
-<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>      p.value <span class="sc">&lt;</span> <span class="fl">0.001</span> <span class="sc">~</span> <span class="st">&quot;***&quot;</span>,</span>
-<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>      p.value <span class="sc">&lt;</span> <span class="fl">0.01</span>  <span class="sc">~</span> <span class="st">&quot;**&quot;</span>,</span>
-<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>      p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>  <span class="sc">~</span> <span class="st">&quot;*&quot;</span>,</span>
-<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;&quot;</span></span>
-<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">p.value =</span> <span class="fu">format.pval</span>(p.value, <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">eps =</span> <span class="fl">0.001</span>)</span>
-<span id="cb39-25"><a href="#cb39-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb39-26"><a href="#cb39-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(taxon, site, habitat) <span class="sc">|&gt;</span></span>
-<span id="cb39-27"><a href="#cb39-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>(<span class="at">groupname_col =</span> <span class="st">&quot;taxon&quot;</span>) <span class="sc">|&gt;</span></span>
-<span id="cb39-28"><a href="#cb39-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(</span>
-<span id="cb39-29"><a href="#cb39-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">site =</span> <span class="st">&quot;Site&quot;</span>,</span>
-<span id="cb39-30"><a href="#cb39-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">habitat =</span> <span class="st">&quot;Habitat&quot;</span>,</span>
-<span id="cb39-31"><a href="#cb39-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">contrast =</span> <span class="st">&quot;Contrast&quot;</span>,</span>
-<span id="cb39-32"><a href="#cb39-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> <span class="st">&quot;Δ slope&quot;</span>,</span>
-<span id="cb39-33"><a href="#cb39-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">z.ratio =</span> <span class="st">&quot;z&quot;</span>,</span>
-<span id="cb39-34"><a href="#cb39-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">p.value =</span> <span class="st">&quot;p&quot;</span>,</span>
-<span id="cb39-35"><a href="#cb39-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig =</span> <span class="st">&quot;&quot;</span></span>
-<span id="cb39-36"><a href="#cb39-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb39-37"><a href="#cb39-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">&quot;Change in size-dependent growth slope after 2019 bleaching, by site&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Acropora</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emtrends</span>(m2_acr, <span class="sc">~</span> site <span class="sc">*</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> site  habitat period log10_size_t0.trend     SE  df asymp.LCL asymp.UCL
+ LTER1 BR      0                    0.664 0.1120 Inf    0.4453     0.883
+ LTER2 BR      0                    0.925 0.1000 Inf    0.7289     1.121
+ LTER4 BR      0                    0.399 0.1160 Inf    0.1717     0.627
+ LTER5 BR      0                    0.530 0.2260 Inf    0.0858     0.973
+ LTER1 OR      0                    0.642 0.0491 Inf    0.5457     0.738
+ LTER2 OR      0                    0.636 0.0507 Inf    0.5364     0.735
+ LTER4 OR      0                    0.721 0.0421 Inf    0.6387     0.804
+ LTER5 OR      0                    0.527 0.0381 Inf    0.4523     0.602
+ LTER1 BR      1                    0.626 0.3080 Inf    0.0225     1.229
+ LTER2 BR      1                    0.628 0.1100 Inf    0.4112     0.844
+ LTER4 BR      1                    0.570 0.0566 Inf    0.4592     0.681
+ LTER5 BR      1                    0.656 0.1030 Inf    0.4537     0.858
+ LTER1 OR      1                    0.772 0.1380 Inf    0.5008     1.043
+ LTER2 OR      1                    0.614 0.0630 Inf    0.4907     0.738
+ LTER4 OR      1                    0.481 0.0468 Inf    0.3891     0.572
+ LTER5 OR      1                    0.326 0.0619 Inf    0.2049     0.448
+
+Confidence level used: 0.95 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pocillopora</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emtrends</span>(m2_poc, <span class="sc">~</span> site <span class="sc">*</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> site  habitat period log10_size_t0.trend     SE  df asymp.LCL asymp.UCL
+ LTER1 BR      0                    0.694 0.0567 Inf   0.58285     0.805
+ LTER2 BR      0                    0.610 0.0501 Inf   0.51189     0.708
+ LTER4 BR      0                    0.608 0.0476 Inf   0.51503     0.701
+ LTER5 BR      0                    0.686 0.0433 Inf   0.60158     0.771
+ LTER1 OR      0                    0.728 0.0190 Inf   0.69065     0.765
+ LTER2 OR      0                    0.654 0.0261 Inf   0.60235     0.705
+ LTER4 OR      0                    0.671 0.0347 Inf   0.60327     0.739
+ LTER5 OR      0                    0.705 0.0272 Inf   0.65125     0.758
+ LTER1 BR      1                    0.435 0.0621 Inf   0.31351     0.557
+ LTER2 BR      1                    0.576 0.0454 Inf   0.48683     0.665
+ LTER4 BR      1                    0.520 0.0392 Inf   0.44333     0.597
+ LTER5 BR      1                    0.718 0.0407 Inf   0.63812     0.798
+ LTER1 OR      1                    0.184 0.0966 Inf  -0.00521     0.373
+ LTER2 OR      1                    0.761 0.0591 Inf   0.64471     0.877
+ LTER4 OR      1                    0.574 0.0669 Inf   0.44316     0.706
+ LTER5 OR      1                    0.719 0.0524 Inf   0.61608     0.821
+
+Confidence level used: 0.95 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Porites</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">emtrends</span>(m2_por, <span class="sc">~</span> site <span class="sc">*</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> site  habitat period log10_size_t0.trend     SE  df asymp.LCL asymp.UCL
+ LTER1 BR      0                    0.742 0.0233 Inf     0.696     0.788
+ LTER2 BR      0                    0.748 0.0188 Inf     0.711     0.785
+ LTER4 BR      0                    0.788 0.0170 Inf     0.755     0.822
+ LTER5 BR      0                    0.837 0.0174 Inf     0.803     0.872
+ LTER1 OR      0                    0.582 0.0455 Inf     0.493     0.672
+ LTER2 OR      0                    0.557 0.0743 Inf     0.411     0.702
+ LTER4 OR      0                    0.848 0.1360 Inf     0.582     1.114
+ LTER5 OR      0                    0.717 0.0740 Inf     0.572     0.862
+ LTER1 BR      1                    0.645 0.0369 Inf     0.572     0.717
+ LTER2 BR      1                    0.712 0.0331 Inf     0.647     0.776
+ LTER4 BR      1                    0.728 0.0222 Inf     0.684     0.771
+ LTER5 BR      1                    0.784 0.0229 Inf     0.740     0.829
+ LTER1 OR      1                    0.262 0.4390 Inf    -0.598     1.122
+ LTER2 OR      1                    0.559 0.1100 Inf     0.343     0.775
+ LTER4 OR      1                    0.370 0.1410 Inf     0.094     0.646
+ LTER5 OR      1                    0.714 0.0691 Inf     0.579     0.850
+
+Confidence level used: 0.95 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>models2 <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">ACR =</span> m2_acr, <span class="at">POC =</span> m2_poc, <span class="at">POR =</span> m2_por)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Group-specific slopes (by site × habitat × period)</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>slopes2 <span class="ot">&lt;-</span> <span class="fu">imap_dfr</span>(models2, <span class="sc">~</span> <span class="fu">as.data.frame</span>(</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">emtrends</span>(.x, <span class="sc">~</span> site <span class="sc">*</span> habitat <span class="sc">*</span> period, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>)</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">taxon =</span> .y))</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Within-habitat period contrasts at each site</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>contrasts2 <span class="ot">&lt;-</span> <span class="fu">imap_dfr</span>(models2, <span class="sc">~</span> <span class="fu">as.data.frame</span>(</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pairs</span>(<span class="fu">emtrends</span>(.x, <span class="sc">~</span> period <span class="sc">|</span> site <span class="sc">*</span> habitat, <span class="at">var =</span> <span class="st">&quot;log10_size_t0&quot;</span>))</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">taxon =</span> .y))</span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean table</span></span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>contrasts2 <span class="sc">|&gt;</span></span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(taxon, site, habitat, contrast, estimate, SE, z.ratio, p.value) <span class="sc">|&gt;</span></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">across</span>(<span class="fu">c</span>(estimate, SE, z.ratio), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>)),</span>
+<span id="cb45-18"><a href="#cb45-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig =</span> <span class="fu">case_when</span>(</span>
+<span id="cb45-19"><a href="#cb45-19" aria-hidden="true" tabindex="-1"></a>      p.value <span class="sc">&lt;</span> <span class="fl">0.001</span> <span class="sc">~</span> <span class="st">&quot;***&quot;</span>,</span>
+<span id="cb45-20"><a href="#cb45-20" aria-hidden="true" tabindex="-1"></a>      p.value <span class="sc">&lt;</span> <span class="fl">0.01</span>  <span class="sc">~</span> <span class="st">&quot;**&quot;</span>,</span>
+<span id="cb45-21"><a href="#cb45-21" aria-hidden="true" tabindex="-1"></a>      p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>  <span class="sc">~</span> <span class="st">&quot;*&quot;</span>,</span>
+<span id="cb45-22"><a href="#cb45-22" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">p.value =</span> <span class="fu">format.pval</span>(p.value, <span class="at">digits =</span> <span class="dv">2</span>, <span class="at">eps =</span> <span class="fl">0.001</span>)</span>
+<span id="cb45-25"><a href="#cb45-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb45-26"><a href="#cb45-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(taxon, site, habitat) <span class="sc">|&gt;</span></span>
+<span id="cb45-27"><a href="#cb45-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>(<span class="at">groupname_col =</span> <span class="st">&quot;taxon&quot;</span>) <span class="sc">|&gt;</span></span>
+<span id="cb45-28"><a href="#cb45-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cols_label</span>(</span>
+<span id="cb45-29"><a href="#cb45-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">site =</span> <span class="st">&quot;Site&quot;</span>,</span>
+<span id="cb45-30"><a href="#cb45-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">habitat =</span> <span class="st">&quot;Habitat&quot;</span>,</span>
+<span id="cb45-31"><a href="#cb45-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">contrast =</span> <span class="st">&quot;Contrast&quot;</span>,</span>
+<span id="cb45-32"><a href="#cb45-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> <span class="st">&quot;Δ slope&quot;</span>,</span>
+<span id="cb45-33"><a href="#cb45-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">z.ratio =</span> <span class="st">&quot;z&quot;</span>,</span>
+<span id="cb45-34"><a href="#cb45-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">p.value =</span> <span class="st">&quot;p&quot;</span>,</span>
+<span id="cb45-35"><a href="#cb45-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">sig =</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb45-36"><a href="#cb45-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb45-37"><a href="#cb45-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tab_header</span>(<span class="at">title =</span> <span class="st">&quot;Change in size-dependent growth slope after 2019 bleaching, by site&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="jnjtywdjja" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#jnjtywdjja table {
+<div id="phwbnavfng" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#phwbnavfng table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#jnjtywdjja thead, #jnjtywdjja tbody, #jnjtywdjja tfoot, #jnjtywdjja tr, #jnjtywdjja td, #jnjtywdjja th {
+#phwbnavfng thead, #phwbnavfng tbody, #phwbnavfng tfoot, #phwbnavfng tr, #phwbnavfng td, #phwbnavfng th {
 border-style: none;
 }
-#jnjtywdjja p {
+#phwbnavfng p {
 margin: 0;
 padding: 0;
 }
-#jnjtywdjja .gt_table {
+#phwbnavfng .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -3681,11 +3685,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#jnjtywdjja .gt_caption {
+#phwbnavfng .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#jnjtywdjja .gt_title {
+#phwbnavfng .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -3696,7 +3700,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#jnjtywdjja .gt_subtitle {
+#phwbnavfng .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -3707,7 +3711,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#jnjtywdjja .gt_heading {
+#phwbnavfng .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -3718,12 +3722,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#jnjtywdjja .gt_bottom_border {
+#phwbnavfng .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#jnjtywdjja .gt_col_headings {
+#phwbnavfng .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -3737,7 +3741,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#jnjtywdjja .gt_col_heading {
+#phwbnavfng .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3756,7 +3760,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#jnjtywdjja .gt_column_spanner_outer {
+#phwbnavfng .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3767,13 +3771,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#jnjtywdjja .gt_column_spanner_outer:first-child {
+#phwbnavfng .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#jnjtywdjja .gt_column_spanner_outer:last-child {
+#phwbnavfng .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#jnjtywdjja .gt_column_spanner {
+#phwbnavfng .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -3784,10 +3788,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#jnjtywdjja .gt_spanner_row {
+#phwbnavfng .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#jnjtywdjja .gt_group_heading {
+#phwbnavfng .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3812,7 +3816,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#jnjtywdjja .gt_empty_group_heading {
+#phwbnavfng .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -3826,13 +3830,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#jnjtywdjja .gt_from_md > :first-child {
+#phwbnavfng .gt_from_md > :first-child {
 margin-top: 0;
 }
-#jnjtywdjja .gt_from_md > :last-child {
+#phwbnavfng .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#jnjtywdjja .gt_row {
+#phwbnavfng .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3850,7 +3854,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#jnjtywdjja .gt_stub {
+#phwbnavfng .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3862,7 +3866,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#jnjtywdjja .gt_stub_row_group {
+#phwbnavfng .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -3875,13 +3879,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#jnjtywdjja .gt_row_group_first td {
+#phwbnavfng .gt_row_group_first td {
 border-top-width: 2px;
 }
-#jnjtywdjja .gt_row_group_first th {
+#phwbnavfng .gt_row_group_first th {
 border-top-width: 2px;
 }
-#jnjtywdjja .gt_summary_row {
+#phwbnavfng .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -3890,14 +3894,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#jnjtywdjja .gt_first_summary_row {
+#phwbnavfng .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#jnjtywdjja .gt_first_summary_row.thick {
+#phwbnavfng .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#jnjtywdjja .gt_last_summary_row {
+#phwbnavfng .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3906,7 +3910,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#jnjtywdjja .gt_grand_summary_row {
+#phwbnavfng .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -3915,7 +3919,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#jnjtywdjja .gt_first_grand_summary_row {
+#phwbnavfng .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3924,7 +3928,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#jnjtywdjja .gt_last_grand_summary_row_top {
+#phwbnavfng .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -3933,10 +3937,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#jnjtywdjja .gt_striped {
+#phwbnavfng .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#jnjtywdjja .gt_table_body {
+#phwbnavfng .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -3944,7 +3948,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#jnjtywdjja .gt_footnotes {
+#phwbnavfng .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -3957,7 +3961,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#jnjtywdjja .gt_footnote {
+#phwbnavfng .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -3965,7 +3969,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#jnjtywdjja .gt_sourcenotes {
+#phwbnavfng .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -3978,64 +3982,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#jnjtywdjja .gt_sourcenote {
+#phwbnavfng .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#jnjtywdjja .gt_left {
+#phwbnavfng .gt_left {
 text-align: left;
 }
-#jnjtywdjja .gt_center {
+#phwbnavfng .gt_center {
 text-align: center;
 }
-#jnjtywdjja .gt_right {
+#phwbnavfng .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#jnjtywdjja .gt_font_normal {
+#phwbnavfng .gt_font_normal {
 font-weight: normal;
 }
-#jnjtywdjja .gt_font_bold {
+#phwbnavfng .gt_font_bold {
 font-weight: bold;
 }
-#jnjtywdjja .gt_font_italic {
+#phwbnavfng .gt_font_italic {
 font-style: italic;
 }
-#jnjtywdjja .gt_super {
+#phwbnavfng .gt_super {
 font-size: 65%;
 }
-#jnjtywdjja .gt_footnote_marks {
+#phwbnavfng .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#jnjtywdjja .gt_asterisk {
+#phwbnavfng .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#jnjtywdjja .gt_indent_1 {
+#phwbnavfng .gt_indent_1 {
 text-indent: 5px;
 }
-#jnjtywdjja .gt_indent_2 {
+#phwbnavfng .gt_indent_2 {
 text-indent: 10px;
 }
-#jnjtywdjja .gt_indent_3 {
+#phwbnavfng .gt_indent_3 {
 text-indent: 15px;
 }
-#jnjtywdjja .gt_indent_4 {
+#phwbnavfng .gt_indent_4 {
 text-indent: 20px;
 }
-#jnjtywdjja .gt_indent_5 {
+#phwbnavfng .gt_indent_5 {
 text-indent: 25px;
 }
-#jnjtywdjja .katex-display {
+#phwbnavfng .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#jnjtywdjja div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#phwbnavfng div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -4313,52 +4317,46 @@ height: 0px !important;
 </div>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>acr_pred_grid_m2 <span class="ot">&lt;-</span> growth_acr <span class="sc">%&gt;%</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(site, habitat, period) <span class="sc">%&gt;%</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">log10_size_t0 =</span> <span class="fu">seq</span>(<span class="fu">min</span>(growth_acr<span class="sc">$</span>log10_size_t0),</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">max</span>(growth_acr<span class="sc">$</span>log10_size_t0),</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>acr_pred_grid_m2<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m2_acr, <span class="at">newdata =</span> acr_pred_grid_m2,</span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>poc_pred_grid_m2 <span class="ot">&lt;-</span> growth_poc <span class="sc">%&gt;%</span></span>
-<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(site, habitat, period) <span class="sc">%&gt;%</span></span>
-<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">log10_size_t0 =</span> <span class="fu">seq</span>(<span class="fu">min</span>(growth_poc<span class="sc">$</span>log10_size_t0),</span>
-<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">max</span>(growth_poc<span class="sc">$</span>log10_size_t0),</span>
-<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
-<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>poc_pred_grid_m2<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m2_poc, <span class="at">newdata =</span> poc_pred_grid_m2,</span>
-<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span>
-<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>por_pred_grid_m2 <span class="ot">&lt;-</span> growth_por <span class="sc">%&gt;%</span></span>
-<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(site, habitat, period) <span class="sc">%&gt;%</span></span>
-<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">log10_size_t0 =</span> <span class="fu">seq</span>(<span class="fu">min</span>(growth_por<span class="sc">$</span>log10_size_t0),</span>
-<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">max</span>(growth_por<span class="sc">$</span>log10_size_t0),</span>
-<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
-<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a>por_pred_grid_m2<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m2_por, <span class="at">newdata =</span> por_pred_grid_m2,</span>
-<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>acr_pred_grid_m2 <span class="ot">&lt;-</span> growth_acr <span class="sc">%&gt;%</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(site, habitat, period) <span class="sc">%&gt;%</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">log10_size_t0 =</span> <span class="fu">seq</span>(<span class="fu">min</span>(growth_acr<span class="sc">$</span>log10_size_t0),</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">max</span>(growth_acr<span class="sc">$</span>log10_size_t0),</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>acr_pred_grid_m2<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m2_acr, <span class="at">newdata =</span> acr_pred_grid_m2,</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>poc_pred_grid_m2 <span class="ot">&lt;-</span> growth_poc <span class="sc">%&gt;%</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(site, habitat, period) <span class="sc">%&gt;%</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">log10_size_t0 =</span> <span class="fu">seq</span>(<span class="fu">min</span>(growth_poc<span class="sc">$</span>log10_size_t0),</span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">max</span>(growth_poc<span class="sc">$</span>log10_size_t0),</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>poc_pred_grid_m2<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m2_poc, <span class="at">newdata =</span> poc_pred_grid_m2,</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>por_pred_grid_m2 <span class="ot">&lt;-</span> growth_por <span class="sc">%&gt;%</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(site, habitat, period) <span class="sc">%&gt;%</span></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">log10_size_t0 =</span> <span class="fu">seq</span>(<span class="fu">min</span>(growth_por<span class="sc">$</span>log10_size_t0),</span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a>                               <span class="fu">max</span>(growth_por<span class="sc">$</span>log10_size_t0),</span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a>                               <span class="at">length.out =</span> <span class="dv">100</span>))</span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a>por_pred_grid_m2<span class="sc">$</span>pred_log10_t1 <span class="ot">&lt;-</span> <span class="fu">predict</span>(m2_por, <span class="at">newdata =</span> por_pred_grid_m2,</span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>                                           <span class="at">type =</span> <span class="st">&quot;response&quot;</span>, <span class="at">re.form =</span> <span class="cn">NA</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_acr,</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> acr_pred_grid_m2,</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period)) <span class="sc">+</span></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
-<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Before bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;After bleaching&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(habitat <span class="sc">~</span> site, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>,</span>
-<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, </span>
-<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Acropora Size-Dependent Growth Across Site and Habitat&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>) <span class="sc">+</span></span>
-<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_acr,</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> acr_pred_grid_m2,</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period)) <span class="sc">+</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Before bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;After bleaching&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(habitat <span class="sc">~</span> site, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>,</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, </span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Acropora Size-Dependent Growth Across Site and Habitat&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>) <span class="sc">+</span></span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb47-14"><a href="#cb47-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb47-15"><a href="#cb47-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4366,24 +4364,23 @@ height: 0px !important;
 </figure>
 </div>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_poc,</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> poc_pred_grid_m2,</span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period)) <span class="sc">+</span></span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
-<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Before bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;After bleaching&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(habitat <span class="sc">~</span> site, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, </span>
-<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, </span>
-<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Pocillopora Size-Dependent Growth Across Site and Habitat&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>) <span class="sc">+</span></span>
-<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;acr_site_growth_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_poc,</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> poc_pred_grid_m2,</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period)) <span class="sc">+</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Before bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;After bleaching&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(habitat <span class="sc">~</span> site, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, </span>
+<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, </span>
+<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Pocillopora Size-Dependent Growth Across Site and Habitat&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>) <span class="sc">+</span></span>
+<span id="cb48-15"><a href="#cb48-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb48-16"><a href="#cb48-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb48-17"><a href="#cb48-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4391,24 +4388,23 @@ height: 0px !important;
 </figure>
 </div>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_por,</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> por_pred_grid_m2,</span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period)) <span class="sc">+</span></span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Before bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;After bleaching&quot;</span>)) <span class="sc">+</span></span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(habitat <span class="sc">~</span> site, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, </span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, </span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Porites Size-Dependent Growth Across Site and Habitat&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>) <span class="sc">+</span></span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
-<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;poc_site_growth_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> growth_por,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> log10_size_t1), <span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> por_pred_grid_m2,</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">x =</span> log10_size_t0, <span class="at">y =</span> pred_log10_t1, <span class="at">color =</span> period)) <span class="sc">+</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">slope =</span> <span class="dv">1</span>, <span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;dodgerblue&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>),</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">&quot;0&quot;</span> <span class="ot">=</span> <span class="st">&quot;Before bleaching&quot;</span>, <span class="st">&quot;1&quot;</span> <span class="ot">=</span> <span class="st">&quot;After bleaching&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(habitat <span class="sc">~</span> site, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">habitat =</span> <span class="fu">c</span>(<span class="st">&quot;BR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Lagoon&quot;</span>, <span class="st">&quot;OR&quot;</span> <span class="ot">=</span> <span class="st">&quot;Forereef&quot;</span>))) <span class="sc">+</span></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">&quot;Initial size (cm³)&quot;</span>, </span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Final size (cm³)&quot;</span>, </span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">&quot;Porites Size-Dependent Growth Across Site and Habitat&quot;</span>, <span class="at">color =</span> <span class="st">&quot;Period&quot;</span>) <span class="sc">+</span></span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span><span class="fu">label_math</span>(<span class="dv">10</span><span class="sc">^</span>.x)) <span class="sc">+</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4416,12 +4412,7 @@ height: 0px !important;
 </figure>
 </div>
 </div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;acr_site_growth_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;poc_site_growth_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;por_site_growth_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;growth&quot;</span>, <span class="st">&quot;figs&quot;</span>, <span class="st">&quot;por_site_growth_plot.png&quot;</span>), <span class="at">height =</span> <span class="dv">5</span>, <span class="at">width =</span> <span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="model-checks-1" class="level2">
@@ -4429,11 +4420,8 @@ height: 0px !important;
 <section id="acropora-residuals-1" class="level3">
 <h3 class="anchored" data-anchor-id="acropora-residuals-1"><em>Acropora</em> residuals</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>acr_growth_mod2_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m2_acr, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(acr_growth_mod2_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>acr_growth_mod2_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m2_acr, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(acr_growth_mod2_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4446,11 +4434,8 @@ height: 0px !important;
 <section id="pocillopora-residuals-1" class="level3">
 <h3 class="anchored" data-anchor-id="pocillopora-residuals-1"><em>Pocillopora</em> residuals</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>poc_growth_mod2_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m2_poc, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(poc_growth_mod2_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>poc_growth_mod2_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m2_poc, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(poc_growth_mod2_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -4463,11 +4448,8 @@ height: 0px !important;
 <section id="porites-residuals-1" class="level3">
 <h3 class="anchored" data-anchor-id="porites-residuals-1"><em>Porites</em> residuals</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>por_growth_mod2_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m2_por, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(por_growth_mod2_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>por_growth_mod2_output <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(<span class="at">fittedModel =</span> m2_por, <span class="at">plot =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(por_growth_mod2_output)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
